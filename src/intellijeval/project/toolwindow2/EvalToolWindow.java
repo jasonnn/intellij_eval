@@ -1,4 +1,4 @@
-package intellijeval.toolwindow2;
+package intellijeval.project.toolwindow2;
 
 import com.intellij.ide.DeleteProvider;
 import com.intellij.ide.util.treeView.AbstractTreeBuilder;
@@ -17,19 +17,16 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.util.Ref;
 import com.intellij.pom.Navigatable;
-import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.EditSourceOnDoubleClickHandler;
-import com.intellij.util.EditSourceOnEnterKeyHandler;
 import com.intellij.util.ui.tree.TreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultTreeModel;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -42,6 +39,7 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class EvalToolWindow extends SimpleToolWindowPanel {
+     private static final String ServiceID="EvalWindow";
 
     public EvalToolWindow(Project project) {
         super(true);
@@ -51,20 +49,16 @@ public class EvalToolWindow extends SimpleToolWindowPanel {
         JScrollPane scrollPane = new JBScrollPane(fsTree.getTree());
         setContent(scrollPane);
         
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentShown(ComponentEvent e) {
-                System.out.println("e = " + e);
-                super.componentShown(e);    //To change body of overridden methods use File | Settings | File Templates.
-            }
 
-            @Override
-            public void componentHidden(ComponentEvent e) {
-                System.out.println("e = " + e);
-                super.componentHidden(e);    //To change body of overridden methods use File | Settings | File Templates.
-            }
-        });
 
+    }
+
+    private static JComponent createToolBar(){
+        JPanel toolbarPanel = new JPanel(new GridLayout());
+          DefaultActionGroup actionGroup = new DefaultActionGroup();
+
+
+        return toolbarPanel;
     }
 
     private static FileSystemTree createFSTree(Project project) {

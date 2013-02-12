@@ -1,10 +1,8 @@
-package intellijeval.toolwindow2;
+package intellijeval.project.toolwindow2;
 
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.util.Function;
-import com.intellij.util.containers.ContainerUtil;
 import intellijeval.EvalComponent;
 import intellijeval.Util;
 import org.jetbrains.annotations.Nullable;

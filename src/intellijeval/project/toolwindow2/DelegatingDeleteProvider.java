@@ -1,4 +1,4 @@
-package intellijeval.toolwindow2;
+package intellijeval.project.toolwindow2;
 
 import com.intellij.ide.DeleteProvider;
 import com.intellij.openapi.actionSystem.DataContext;

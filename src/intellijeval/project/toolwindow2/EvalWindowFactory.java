@@ -1,4 +1,4 @@
-package intellijeval.toolwindow2;
+package intellijeval.project.toolwindow2;
 
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
@@ -6,11 +6,6 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import com.intellij.ui.content.ContentManagerEvent;
-import com.intellij.ui.content.ContentManagerListener;
-
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,8 +18,8 @@ public class EvalWindowFactory implements ToolWindowFactory,DumbAware {
     @Override
     public void createToolWindowContent(Project project, ToolWindow toolWindow) {
         System.out.println("EvalWindowFactory.createToolWindowContent");
-       //  EvalToolWindow window = EvalToolWindow.getInstance(project);
-        EvalToolWindow window = new EvalToolWindow(project);
+         EvalToolWindow window = EvalToolWindow.getInstance(project);
+       // EvalToolWindow window = new EvalToolWindow(project);
         Content content = ContentFactory.SERVICE.getInstance().createContent(window,"",false);
 
 

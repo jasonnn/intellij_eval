@@ -1,4 +1,4 @@
-package intellijeval.toolwindow2.actions;
+package intellijeval.project.toolwindow2.actions;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;

@@ -1,4 +1,4 @@
-package intellijeval;
+package intellijeval.project;
 
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
