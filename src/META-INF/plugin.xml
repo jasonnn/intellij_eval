@@ -55,6 +55,18 @@ How to use:
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceInterface="intellijeval.Settings" serviceImplementation="intellijeval.Settings"/>
+
+        <toolWindow id="My Window" icon="/intellijeval/toolwindow/groovy_file_type.png" canCloseContents="true" anchor="right" factoryClass="intellijeval.toolwindow2.EvalWindowFactory" />
+        <projectService id="EvalWindow" serviceInterface="intellijeval.toolwindow2.EvalToolWindow" serviceImplementation="intellijeval.toolwindow2.EvalToolWindow" />
+         <projectService id="EvalProjectService" serviceInterface="intellijeval.EvalProjectService" serviceImplementation="intellijeval.EvalProjectService" />
+
+
+
     </extensions>
 
+    <project-components>
+        <component>
+            <implementation-class>intellijeval.EvalProjectComponent</implementation-class>
+        </component>
+    </project-components>
 </idea-plugin>
