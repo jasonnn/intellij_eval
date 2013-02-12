@@ -16,19 +16,21 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.util.Ref;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.EditSourceOnDoubleClickHandler;
 import com.intellij.util.ui.tree.TreeUtil;
+import intellijeval.EvalComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.net.URI;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -41,16 +43,69 @@ import java.util.List;
 public class EvalToolWindow extends SimpleToolWindowPanel {
      private static final String ServiceID="EvalWindow";
 
+    private final Ref<FileSystemTree> fsTreeRef = Ref.create();
+
     public EvalToolWindow(Project project) {
         super(true);
         setProvideQuickActions(false);
 
+
         FileSystemTree fsTree = createFSTree(project);
+        fsTreeRef.set(fsTree);
         JScrollPane scrollPane = new JBScrollPane(fsTree.getTree());
         setContent(scrollPane);
         
 
 
+    }
+
+    public Collection<String> getSelectedPluginsIDs(){
+        //TODO: this is also ugly
+     return virtualFilesToIDs(findPluginRootsFor(fsTreeRef.get().getSelectedFiles()));
+    }
+
+    public Collection<URI>  getSelectedPluginsBasePaths(){
+        //TODO: this is ugly!
+        return virtualFilesToURI(findPluginRootsFor(fsTreeRef.get().getSelectedFiles()));
+    }
+    private static Collection<String> virtualFilesToIDs(Collection<VirtualFile> files){
+        Collection<String> ret = new ArrayList<String>(files.size());
+        for(VirtualFile file: files){
+            ret.add(file.getName());
+        }
+        return ret;
+    }
+
+    private static Collection<URI> virtualFilesToURI(Collection<VirtualFile> virtualFiles){
+        Collection<URI> ret = new ArrayList<URI>(virtualFiles.size());
+        for(VirtualFile file:virtualFiles){
+            ret.add(URI.create(file.getPath()));
+        }
+
+        return ret;
+    }
+
+    private static Collection<VirtualFile> findPluginRootsFor(VirtualFile[] files){
+        Set<VirtualFile> ret = new HashSet<VirtualFile>();
+        for(VirtualFile file: files){
+            VirtualFile root = pluginFolderOf(file);
+            if(root!=null) ret.add(root);
+
+        }
+
+        return ret;
+    }
+
+    private static VirtualFile pluginFolderOf(VirtualFile file){
+        VirtualFile parent = file.getParent();
+        if(parent==null) return null;
+        String base = EvalComponent.pluginsRootPath();
+
+        if(!base.equals(parent.getPath())){
+            return pluginFolderOf(parent);
+
+        }
+      return file;
     }
 
     private static JComponent createToolBar(){

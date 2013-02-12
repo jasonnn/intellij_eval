@@ -61,10 +61,11 @@ How to use:
          <projectService id="EvalProjectService" serviceInterface="intellijeval.project.EvalProjectService" serviceImplementation="intellijeval.project.EvalProjectService" />
 
 
-
+     <errorHandler id="MyErrorHandler" implementation="intellijeval.util.MyErrorReportSubmitter" />
     </extensions>
 
     <project-components>
+
         <component>
             <implementation-class>intellijeval.project.EvalProjectComponent</implementation-class>
         </component>

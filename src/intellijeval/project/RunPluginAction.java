@@ -2,6 +2,7 @@ package intellijeval.project;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,6 +14,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 public class RunPluginAction extends AnAction {
     @Override
     public void actionPerformed(AnActionEvent e) {
-        //To change body of implemented methods use File | Settings | File Templates.
+
+
     }
 }
