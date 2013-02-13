@@ -56,12 +56,14 @@ How to use:
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceInterface="intellijeval.Settings" serviceImplementation="intellijeval.Settings"/>
 
+
+        <applicationService id="EvalAppService" serviceInterface="intellijeval.EvalAppService" serviceImplementation="intellijeval.EvalAppService" />
         <toolWindow id="My Window" icon="/intellijeval/toolwindow/groovy_file_type.png" canCloseContents="true" anchor="right" factoryClass="intellijeval.project.toolwindow2.EvalWindowFactory" />
         <projectService id="EvalWindow" serviceInterface="intellijeval.project.toolwindow2.EvalToolWindow" serviceImplementation="intellijeval.project.toolwindow2.EvalToolWindow" />
          <projectService id="EvalProjectService" serviceInterface="intellijeval.project.EvalProjectService" serviceImplementation="intellijeval.project.EvalProjectService" />
 
 
-     <errorHandler id="MyErrorHandler" implementation="intellijeval.util.MyErrorReportSubmitter" />
+     <errorHandler id="MyErrorHandler" implementation="intellijeval.util.MyErrorReportSubmitter" order="first"/>
     </extensions>
 
     <project-components>

@@ -6,6 +6,7 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import intellijeval.project.EvalProjectService;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,8 +19,9 @@ public class EvalWindowFactory implements ToolWindowFactory,DumbAware {
     @Override
     public void createToolWindowContent(Project project, ToolWindow toolWindow) {
         System.out.println("EvalWindowFactory.createToolWindowContent");
-         EvalToolWindow window = EvalToolWindow.getInstance(project);
+        // EvalToolWindow window = EvalToolWindow.getInstance(project);
        // EvalToolWindow window = new EvalToolWindow(project);
+        EvalToolWindow window = EvalProjectService.getInstance(project).getWindow();
         Content content = ContentFactory.SERVICE.getInstance().createContent(window,"",false);
 
 

@@ -2,6 +2,7 @@ package intellijeval.project;
 
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
+import intellijeval.util.MyUncaughtExceptionHandler;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -14,12 +15,17 @@ import org.jetbrains.annotations.NotNull;
 public class EvalProjectComponent implements ProjectComponent {
     private final Project project;
 
+    static {
+        MyUncaughtExceptionHandler.initDefault();
+    }
+
     public EvalProjectComponent(Project project) {
         this.project = project;
+        System.out.println("EvalProjectComponent.EvalProjectComponent");
     }
 
     public void initComponent() {
-        // TODO: insert component initialization logic here
+        System.out.println("thread handler = " + Thread.currentThread().getUncaughtExceptionHandler());
     }
 
     public void disposeComponent() {
@@ -32,7 +38,7 @@ public class EvalProjectComponent implements ProjectComponent {
     }
 
     public void projectOpened() {
-        // called when project is opened
+            throw new RuntimeException("FAIL");
     }
 
     public void projectClosed() {
