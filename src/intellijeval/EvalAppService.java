@@ -5,9 +5,9 @@ import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.extensions.PluginId;
 import groovy.lang.GroovyClassLoader;
+import intellijeval.util.map.EvalBindingsMap;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,7 +20,7 @@ public class EvalAppService {
 
     public static final String pluginId="IntelliJEval";
 
-    private final Map<String,?> bindings = new ConcurrentHashMap<String, Object>();
+    private final EvalBindingsMap appBindings = new EvalBindingsMap(new WeakHashMap<String, Object>());
 
 
     private GroovyClassLoader gcl;
@@ -33,8 +33,8 @@ public class EvalAppService {
        return gcl;
      }
 
-    public Map<String, ?> getBindings() {
-        return bindings;
+    public EvalBindingsMap getAppBindings(){
+        return appBindings;
     }
 
     public static EvalAppService getInstance(){
