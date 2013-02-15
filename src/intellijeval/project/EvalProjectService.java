@@ -10,6 +10,7 @@ import intellijeval.project.toolwindow2.EvalToolWindow;
 import intellijeval.util.map.EvalBindingsMap;
 import intellijeval.util.map.ObservableMap;
 import intellijeval.util.RefType;
+import intellijeval.util.map.cache.ObservableCache;
 
 import java.util.WeakHashMap;
 
@@ -24,40 +25,26 @@ public class EvalProjectService {
     private final EvalToolWindow window;
     private final Project project;
 
-    private EvalBindingsMap projectBindings;
 
     //TODO: for adding project/module libraries.
     private GroovyClassLoader projectClassLoader;
 
-    private final Cache<String, Object> projectBindings2 = CacheBuilder.newBuilder().weakValues().build();
+    private EvalBindingsMap projectBindings;
+    private  ObservableCache<String, Object> projectBindings2;
 
-    private final ObservableMap.Listener<String, Object> bindingsListener = new ObservableMap.Listener<String, Object>() {
-        @Override
-        public void entryAdded(String key, Object value) {
-            projectBindings.put(key, value);
-        }
 
-        @Override
-        public void entryRemoved(String key, Object value) {
-            projectBindings.remove(key);
-        }
-    };
 
 
     public EvalProjectService(Project project) {
         this.project = project;
         this.window = new EvalToolWindow(project);
-        this.projectBindings = new EvalBindingsMap(new WeakHashMap<String, Object>(), RefType.WEAK);
         this.projectClassLoader = new GroovyClassLoader(EvalAppService.getInstance().getAppClassLoader());
+        this.projectBindings = new EvalBindingsMap(new WeakHashMap<String, Object>(), RefType.WEAK);
+         this.projectBindings2 = new ObservableCache<String, Object>();
+
     }
 
-    public void addBindingsContributor(EvalBindingsMap contributor) {
-        contributor.addListener(this.bindingsListener);
-    }
 
-    public void removeBindingsContributor(EvalBindingsMap contributor) {
-        contributor.removeListener(this.bindingsListener);
-    }
 
     public GroovyClassLoader getProjectClassLoader() {
         return projectClassLoader;
@@ -75,7 +62,7 @@ public class EvalProjectService {
         return projectBindings;
     }
 
-    public Cache<String,Object> getProjectBindings2(){
+    public ObservableCache<String,Object> getProjectBindings2(){
         return projectBindings2;
     }
     public static EvalProjectService getInstance(Project project) {

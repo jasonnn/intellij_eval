@@ -8,8 +8,10 @@ import groovy.util.GroovyScriptEngine;
 import intellijeval.EvalAppService;
 import intellijeval.project.EvalProjectService;
 import intellijeval.util.map.EvalBindingsMap;
+import intellijeval.util.map.cache.CacheMapAdapterThingForBinding;
 
 import java.net.URI;
+import java.util.HashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,11 +36,15 @@ public class EvalPlugin implements Disposable {
     private EvalBindingsMap projectBindingContributions;
     private EvalBindingsMap appBindingsContributions;
 
+    private CacheMapAdapterThingForBinding projectContributions;
+
     public EvalPlugin(String id, URI pluginBase, EvalContext context, Project project) {
         this.id = id;
         this.pluginBase = pluginBase;
         this.context = context;
         this.project = project;
+//        this.appService=EvalAppService.getInstance();
+//        this.projectService=EvalProjectService.getInstance(project);
 
         init();
     }
@@ -50,6 +56,8 @@ public class EvalPlugin implements Disposable {
         this(id,URI.create(basePath), context, projectService.getProject());
         this.projectService=projectService;
         this.appService=appService;
+
+       projectContributions=new CacheMapAdapterThingForBinding(projectService.getProjectBindings2(),new HashMap<String, Object>());
 
     }
 

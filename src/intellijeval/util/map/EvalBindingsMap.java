@@ -4,6 +4,7 @@ import groovy.lang.Closure;
 import intellijeval.util.RefType;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,7 +13,7 @@ import java.util.Map;
  * Time: 2:32 PM
  * To change this template use File | Settings | File Templates.
  */
-public class EvalBindingsMap extends NonUpdatingObservableMap<String,Object> {
+public class EvalBindingsMap extends CachingObservableMap<String,Object> {
 
     public EvalBindingsMap(Map<String, Object> delegate) {
         super(delegate);
@@ -24,6 +25,16 @@ public class EvalBindingsMap extends NonUpdatingObservableMap<String,Object> {
 
     @Override
     public Object put(String key, Object value) {
-        return value instanceof Closure ? super.put(key,((Closure) value).call()) : super.put(key,value);
+        return value instanceof Callable ? super.put(key,handleCallable(value)) : super.put(key,value);
+    }
+
+        private Object handleCallable(Object callable) {
+        Object result = null;
+        try {
+            result = ((Callable) callable).call();
+        } catch (Exception e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return result;
     }
 }

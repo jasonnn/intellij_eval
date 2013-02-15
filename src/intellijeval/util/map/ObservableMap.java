@@ -22,10 +22,11 @@ public class ObservableMap<K,V> extends DelegatingMap<K,V> {
           }
 
 
-     private Set<Listener<K,V>> listeners = new HashSet<Listener<K, V>>();
+     private Set<Listener<K,V>> listeners;
 
     public ObservableMap(Map<K, V> delegate) {
         super(delegate);
+        listeners = new HashSet<Listener<K, V>>();
 
     }
 

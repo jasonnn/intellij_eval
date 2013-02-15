@@ -15,7 +15,7 @@ import java.util.Set;
  */
 public class DelegatingMap<K,V> implements Map<K,V> {
 
-    private Map<K,V> delegate;
+    protected Map<K,V> delegate;
 
     public DelegatingMap(Map<K, V> delegate) {
         this.delegate = delegate;
@@ -104,7 +104,7 @@ public class DelegatingMap<K,V> implements Map<K,V> {
 
     @Override
     public boolean equals(Object o) {
-        return delegate.equals(o);
+        return o != null && (o == this || delegate.equals(o));
     }
 
     @Override

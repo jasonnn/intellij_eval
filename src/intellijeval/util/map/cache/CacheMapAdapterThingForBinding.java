@@ -1,8 +1,7 @@
-package intellijeval.util.map;
+package intellijeval.util.map.cache;
 
 import com.google.common.cache.Cache;
 import com.google.common.collect.ForwardingMap;
-import com.google.common.util.concurrent.Callables;
 import groovy.lang.Closure;
 
 import java.util.LinkedHashMap;

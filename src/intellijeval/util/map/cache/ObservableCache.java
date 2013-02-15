@@ -1,16 +1,14 @@
-package intellijeval.util.map;
+package intellijeval.util.map.cache;
 
 import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.ForwardingCache;
 import com.google.common.util.concurrent.Callables;
 import com.intellij.openapi.util.Ref;
 
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created with IntelliJ IDEA.
@@ -33,16 +31,27 @@ public class ObservableCache<K,V> extends ForwardingCache<K,V> {
 
     public ObservableCache(Cache<K, V> delegate) {
         this.delegate = delegate;
-        this.listeners=new LinkedHashSet<Listener<K, V>>();//TODO weak?
+        this.listeners=Collections.newSetFromMap(new WeakHashMap<Listener<K, V>, Boolean>());
+    }
+
+    public ObservableCache(Cache<K,V> delegate,Set<Listener<K,V>>listenerList){
+        this.delegate=delegate;
+        this.listeners=listenerList;
+    }
+
+    public ObservableCache(){
+        this.delegate= CacheBuilder.newBuilder().weakValues().build();
+        this.listeners = Collections.newSetFromMap(new WeakHashMap<Listener<K, V>, Boolean>());
     }
 
 
     @Override
     public V get(K key, Callable<? extends V> valueLoader) throws ExecutionException {
         WasItCalled<V> question = new WasItCalled<V>(valueLoader);
-     V result=   super.get(key,question);
-        if(question.wasItCalled()) notifyAdd(key,result);
+        V result = super.get(key, question);
+        if (question.wasItCalled()) notifyAdd(key, result);
         return result;
+
     }
 
     private void notifyAdd(K key,V value){
@@ -120,14 +129,12 @@ public class ObservableCache<K,V> extends ForwardingCache<K,V> {
 
   static class WasItCalled<V> implements Callable<V>{
 
-
+      private final Callable<V> delegate;
+      private final Ref<Boolean> called = Ref.create(Boolean.FALSE);
 
       WasItCalled(V value){
           this.delegate=Callables.returning(value);
       }
-
-      private final Callable<V> delegate;
-      private final Ref<Boolean> called = Ref.create(Boolean.FALSE);
 
       public WasItCalled(Callable<? extends V> delegate) {
           this.delegate= (Callable<V>) delegate;
