@@ -56,10 +56,6 @@ public class EvalPlugin implements Disposable {
     private void init(){
         loader = new GroovyClassLoader(EvalProjectService.getInstance(project).getProjectClassLoader());
 
-
-
-
-
     }
 
 

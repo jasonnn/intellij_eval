@@ -1,5 +1,7 @@
 package intellijeval.project;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import groovy.lang.GroovyClassLoader;
@@ -19,18 +21,20 @@ import java.util.WeakHashMap;
  * To change this template use File | Settings | File Templates.
  */
 public class EvalProjectService {
-      private final EvalToolWindow window;
-      private final Project project;
+    private final EvalToolWindow window;
+    private final Project project;
 
     private EvalBindingsMap projectBindings;
 
     //TODO: for adding project/module libraries.
     private GroovyClassLoader projectClassLoader;
 
-    private final ObservableMap.Listener<String,Object> bindingsListener = new ObservableMap.Listener<String, Object>() {
+    private final Cache<String, Object> projectBindings2 = CacheBuilder.newBuilder().weakValues().build();
+
+    private final ObservableMap.Listener<String, Object> bindingsListener = new ObservableMap.Listener<String, Object>() {
         @Override
         public void entryAdded(String key, Object value) {
-            projectBindings.put(key,value);
+            projectBindings.put(key, value);
         }
 
         @Override
@@ -40,18 +44,18 @@ public class EvalProjectService {
     };
 
 
-    public EvalProjectService(Project project){
-        this.project=project;
-        this.window=new EvalToolWindow(project);
-        this.projectBindings=new EvalBindingsMap(new WeakHashMap<String, Object>(), RefType.WEAK);
-        this.projectClassLoader=new GroovyClassLoader(EvalAppService.getInstance().getAppClassLoader());
+    public EvalProjectService(Project project) {
+        this.project = project;
+        this.window = new EvalToolWindow(project);
+        this.projectBindings = new EvalBindingsMap(new WeakHashMap<String, Object>(), RefType.WEAK);
+        this.projectClassLoader = new GroovyClassLoader(EvalAppService.getInstance().getAppClassLoader());
     }
 
-   public void addBindingsContributor(EvalBindingsMap contributor){
-      contributor.addListener(this.bindingsListener);
+    public void addBindingsContributor(EvalBindingsMap contributor) {
+        contributor.addListener(this.bindingsListener);
     }
 
-    public void removeBindingsContributor(EvalBindingsMap contributor){
+    public void removeBindingsContributor(EvalBindingsMap contributor) {
         contributor.removeListener(this.bindingsListener);
     }
 
@@ -71,7 +75,10 @@ public class EvalProjectService {
         return projectBindings;
     }
 
-    public static EvalProjectService getInstance(Project project){
-        return ServiceManager.getService(project,EvalProjectService.class);
+    public Cache<String,Object> getProjectBindings2(){
+        return projectBindings2;
+    }
+    public static EvalProjectService getInstance(Project project) {
+        return ServiceManager.getService(project, EvalProjectService.class);
     }
 }
