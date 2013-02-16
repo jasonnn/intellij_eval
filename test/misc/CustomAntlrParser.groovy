@@ -1,3 +1,4 @@
+package misc
 
 /**
  * Created with IntelliJ IDEA.

@@ -20,6 +20,10 @@ import java.util.HashMap;
  * Time: 11:47 AM
  * To change this template use File | Settings | File Templates.
  */
+
+//TODO: this class is particularly bad
+//TODO: also look into using the ij message system to synchronize map views
+    // http://confluence.jetbrains.com/display/IDEADEV/IntelliJ+IDEA+Messaging+infrastructure
 public class EvalPlugin implements Disposable {
     private final String id;
     private final URI pluginBase;

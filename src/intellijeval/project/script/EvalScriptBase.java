@@ -15,6 +15,9 @@ public abstract class EvalScriptBase extends Script {
     
     private EvalContext ctx;
 
+    protected EvalScriptBase() {
+    }
+
     protected EvalScriptBase(Binding binding) {
         super(binding);
         initFieldsFromBinding();
