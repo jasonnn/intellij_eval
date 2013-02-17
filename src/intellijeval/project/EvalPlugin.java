@@ -1,4 +1,4 @@
-package intellijeval.project.script;
+package intellijeval.project;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;
@@ -6,12 +6,11 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.util.GroovyScriptEngine;
 import intellijeval.EvalAppService;
-import intellijeval.project.EvalProjectService;
+import intellijeval.project.script.EvalContext;
 import intellijeval.util.map.EvalBindingsMap;
 import intellijeval.util.map.cache.CacheMapAdapterThingForBinding;
 
 import java.net.URI;
-import java.util.HashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,56 +22,32 @@ import java.util.HashMap;
 
 //TODO: this class is particularly bad
 //TODO: also look into using the ij message system to synchronize map views
-    // http://confluence.jetbrains.com/display/IDEADEV/IntelliJ+IDEA+Messaging+infrastructure
+// http://confluence.jetbrains.com/display/IDEADEV/IntelliJ+IDEA+Messaging+infrastructure
 public class EvalPlugin implements Disposable {
     private final String id;
     private final URI pluginBase;
     private final EvalContext context;
-
-    private Project project;
-
-    private EvalProjectService projectService;
-    private EvalAppService appService;
-
+    private final Project project;
+    private final EvalProjectService projectService;
+    private final EvalAppService appService;
     private GroovyClassLoader loader;
     private GroovyScriptEngine engine;
-
     private EvalBindingsMap projectBindingContributions;
     private EvalBindingsMap appBindingsContributions;
-
     private CacheMapAdapterThingForBinding projectContributions;
 
-    public EvalPlugin(String id, URI pluginBase, EvalContext context, Project project) {
+
+    public EvalPlugin(String id, URI pluginBase, EvalContext context, Project project, EvalProjectService projectService, EvalAppService appService) {
         this.id = id;
         this.pluginBase = pluginBase;
         this.context = context;
         this.project = project;
-//        this.appService=EvalAppService.getInstance();
-//        this.projectService=EvalProjectService.getInstance(project);
-
-        init();
-    }
-    public EvalPlugin(String id, String basePath, EvalContext context,Project project){
-        this(id,URI.create(basePath), context, project);
-    }
-
-    public EvalPlugin(String id,String basePath,EvalContext context,EvalProjectService projectService,EvalAppService appService){
-        this(id,URI.create(basePath), context, projectService.getProject());
-        this.projectService=projectService;
-        this.appService=appService;
-
-       projectContributions=new CacheMapAdapterThingForBinding(projectService.getProjectBindings2(),new HashMap<String, Object>());
-
-    }
-
-    private void init(){
-        loader = new GroovyClassLoader(EvalProjectService.getInstance(project).getProjectClassLoader());
-
+        this.projectService = projectService;
+        this.appService = appService;
     }
 
 
-
-    public Binding createBinding(){
+    public Binding createBinding() {
 
 
         return null;//TODO
@@ -86,7 +61,7 @@ public class EvalPlugin implements Disposable {
         return pluginBase;
     }
 
-    public EvalContext getContext(){
+    public EvalContext getContext() {
         return context;
     }
 

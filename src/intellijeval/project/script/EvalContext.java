@@ -1,6 +1,11 @@
 package intellijeval.project.script;
 
+import groovy.lang.Binding;
 import groovy.lang.Closure;
+import groovy.lang.MissingMethodException;
+import groovy.lang.MissingPropertyException;
+
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -9,7 +14,19 @@ import groovy.lang.Closure;
  * Time: 12:21 PM
  * To change this template use File | Settings | File Templates.
  */
-//TODO: is this the right name?
-public interface EvalContext extends ScriptOutputHandler{
-    <T> T runOnce(String id, Closure<T> closure);
+public interface  EvalContext  extends ScriptOutputHandler {
+
+
+
+
+    public abstract <T> T runOnce(String id, Closure<T> closure);
+
+
+
+
+    public abstract Object handlePropertyMissing(String name) throws MissingPropertyException;
+
+    public abstract Object handlePropertyMissing(String name, Object value) throws MissingPropertyException;
+
+    public abstract Object handleMethodMissing(String name, Object[] args) throws MissingMethodException;
 }

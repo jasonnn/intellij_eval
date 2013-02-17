@@ -67,9 +67,13 @@ public class ScriptUtil {
         return  EvalPath.uri;
     }
 
-    public static Collection<File> getPluginDirs(){
+    public static Collection<File>getDefaultPluginDirs(){
+        return getPluginDirs(new File(getEvalBasePath()));
+    }
+
+    public static Collection<File> getPluginDirs(File base){
         Set<File> ret = new HashSet<File>();
-        File base = new File(getEvalBasePath());
+       // File base = new File(getEvalBasePath());
        File[] dirs= base.listFiles(DirectoryFilter.INSTANCE) ;
 
         if(dirs==null || dirs.length==0) return Collections.emptySet();

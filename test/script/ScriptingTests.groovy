@@ -3,6 +3,9 @@ package script
 import groovy.io.FileType
 import groovy.io.FileVisitResult
 import intellijeval.project.script.ScriptUtil
+import intellijeval.project.script.ctx.AbstractEvalContext
+import intellijeval.project.script.ctx.out.PrintStreamHandler
+import org.codehaus.groovy.control.messages.WarningMessage
 import util.Util
 
 /**
@@ -15,41 +18,101 @@ import util.Util
 class ScriptingTests {
 
     ScriptingTests() {
+
+        //test1()
+        test2()
+    }
+
+    def test1() {
+        def cc = ScriptUtil.createDefaultCompilerConfiguration()
+        File out = new File('./compile')
+        out.mkdirs()
+        cc.targetDirectory = out
+        cc.debug = true
+        cc.verbose = true
+        cc.warningLevel = WarningMessage.PARANOIA
+        cc.output = new PrintWriter(System.out)
+        // cc.setScriptBaseClass('groovy.lang.Script')
+        // cc.classpathList=getRoots().collect {it.path}  as List
+
+
+        def gcl = new GroovyClassLoader(ScriptingTests.class.classLoader, cc, false)
+
+        def gse = new GroovyScriptEngine(getRoots(), gcl)
+        gse.config = cc
+
+        gse.run('MyScript.groovy', new Binding())
+    }
+
+    def test2() {
         def cc = ScriptUtil.createDefaultCompilerConfiguration()
 
-        cc.debug=true
-        cc.verbose=true
-       // cc.output= new PrintWriter(System.err)
-        cc.setScriptBaseClass('groovy.lang.Script')
+        def gcl = new GroovyClassLoader(ScriptingTests.class.classLoader, cc, false)
 
-        def gcl = new GroovyClassLoader(ScriptingTests.class.classLoader,cc,false)
+        def gse = new GroovyScriptEngine(getRoots(), gcl)
+        gse.config = cc
 
-        def gse = new GroovyScriptEngine(getRoots(),gcl)
+//        def cls = gse.loadScriptByName('MyScript2.groovy')
+//        assert cls != null
 
-        gse.run('MyScript.groovy',new Binding())
+        def bindings = [ctx: new TestContext()]
+        def scrpt = gse.createScript('MyScript2.groovy', new Binding(bindings))
+        scrpt.run()
+
+        println bindings
+
 
     }
 
+    class TestContext extends AbstractEvalContext {
 
-   static URL[] getRoots(){
-       def roots=[]
-       Util.testDir.traverse(
-               type: FileType.DIRECTORIES ,
-               preDir : {if (it.name.startsWith('.')) return FileVisitResult.SKIP_SUBTREE},
-               visitRoot: true,
-               preRoot: true,
-            //   sort: { a, b-> a.canonicalPath <=> b.canonicalPath},
-               visit:{ roots<<it.toURI().toURL()}
+        protected TestContext() {
+            super(new PrintStreamHandler())
+        }
 
-       )
-      // roots.each{println it}
+        @Override
+        def <T> T runOnce(String id, Closure<T> closure) {
+            println "ScriptingTests\$TestContext.runOnce"
+        }
 
-       return roots as URL[]
+        @Override
+        Object handlePropertyMissing(String name) throws MissingPropertyException {
+            println "ScriptingTests\$TestContext.handlePropertyMissing"
+           //throw new MissingPropertyException(name)
+        }
+
+        @Override
+        Object handlePropertyMissing(String name, Object value) throws MissingPropertyException {
+            println "ScriptingTests\$TestContext.handlePropertyMissing"
+        }
+
+        @Override
+        Object handleMethodMissing(String name, Object[] args) throws MissingMethodException {
+            println "ScriptingTests\$TestContext.handleMethodMissing"
+
+        }
+    }
+
+
+    static URL[] getRoots() {
+        def roots = []
+        Util.testDir.traverse(
+                type: FileType.DIRECTORIES,
+                preDir: { if (it.name.startsWith('.')) return FileVisitResult.SKIP_SUBTREE },
+                visitRoot: true,
+                preRoot: true,
+                //   sort: { a, b-> a.canonicalPath <=> b.canonicalPath},
+                visit: { roots << it.toURI().toURL() }
+
+        )
+        // roots.each{println it}
+
+        return roots as URL[]
     }
 
 
 
     public static void main(args) {
-      new ScriptingTests()
+        new ScriptingTests()
     }
 }

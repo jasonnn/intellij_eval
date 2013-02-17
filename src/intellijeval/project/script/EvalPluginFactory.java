@@ -1,5 +1,7 @@
 package intellijeval.project.script;
 
+import intellijeval.project.EvalPlugin;
+
 import java.net.URI;
 
 /**
@@ -11,5 +13,6 @@ import java.net.URI;
  */
 public interface EvalPluginFactory {
 
-     EvalPlugin createPlugin(URI base);
+     //EvalPlugin createPlugin(URI base);
+    EvalPlugin createPlugin(String name) throws Exception;
 }
