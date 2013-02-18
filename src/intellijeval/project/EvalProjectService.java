@@ -12,6 +12,7 @@ import intellijeval.project.script.EvalPluginFactoryImpl;
 import intellijeval.project.toolwindow2.EvalToolWindow;
 import intellijeval.util.RefType;
 import intellijeval.util.map.EvalBindingsMap;
+import intellijeval.util.map.ObservableMap;
 import intellijeval.util.map.cache.ObservableCache;
 
 import java.util.WeakHashMap;
@@ -38,7 +39,7 @@ class EvalProjectService implements Disposable.Parent {
     };
     private final LoadingCache<String, EvalPlugin> pluginCache =
             CacheBuilder.newBuilder()
-                        .weakValues()
+                        //.weakValues()
                         .expireAfterAccess(5, TimeUnit.MINUTES)
                         .removalListener(removalListener)
                         .build(new CacheLoader<String, EvalPlugin>() {
@@ -49,11 +50,15 @@ class EvalProjectService implements Disposable.Parent {
                             }
                         });
     private final EvalPluginFactory pluginFactory;
+    //TODO: implement
+    private final
+    ObservableMap.VetoableListener<String, Object> mapListener = new ObservableMap.ListenerAdapter<String,Object>();
+
+
     //TODO: for adding project/module libraries.
     private GroovyClassLoader projectClassLoader;
     private EvalBindingsMap projectBindings;
     private ObservableCache<String, Object> projectBindings2;
-
 
     public
     EvalProjectService(Project project) {
@@ -72,11 +77,22 @@ class EvalProjectService implements Disposable.Parent {
     }
 
     public
+    ObservableMap.Listener<String, Object> getMapListener() {
+        return mapListener;
+    }
+
+    public
+    void observeMap(ObservableMap<String, Object> map) {
+        map.addListener(mapListener);
+    }
+
+    public
     EvalPlugin getPlugin(String name) throws ExecutionException {
         return pluginCache.get(name);
     }
 
-    public void disposePlugin(String name){
+    public
+    void disposePlugin(String name) {
         pluginCache.invalidate(name);
     }
 

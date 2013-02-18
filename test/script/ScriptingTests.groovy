@@ -3,10 +3,8 @@ package script
 import groovy.io.FileType
 import groovy.io.FileVisitResult
 import intellijeval.project.script.ScriptUtil
-import intellijeval.project.script.ctx.AbstractEvalContext
-import intellijeval.project.script.ctx.out.PrintStreamHandler
 import org.codehaus.groovy.control.messages.WarningMessage
-import util.Util
+import util.TestUtil
 
 /**
  * Created with IntelliJ IDEA.
@@ -69,7 +67,7 @@ class ScriptingTests {
 
     static URL[] getRoots() {
         def roots = []
-        Util.testDir.traverse(
+        TestUtil.testDir.traverse(
                 type: FileType.DIRECTORIES,
                 preDir: { if (it.name.startsWith('.')) return FileVisitResult.SKIP_SUBTREE },
                 visitRoot: true,

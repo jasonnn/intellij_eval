@@ -23,6 +23,7 @@ import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.EditSourceOnDoubleClickHandler;
 import com.intellij.util.ui.tree.TreeUtil;
 import intellijeval.EvalComponent;
+import intellijeval.project.RunPluginAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,12 +41,13 @@ import java.util.List;
  * Time: 2:17 PM
  * To change this template use File | Settings | File Templates.
  */
-public class EvalToolWindow extends SimpleToolWindowPanel {
-     private static final String ServiceID="EvalWindow";
-
+public
+class EvalToolWindow extends SimpleToolWindowPanel {
+    private static final String ServiceID = "EvalWindow";
     private final Ref<FileSystemTree> fsTreeRef = Ref.create();
 
-    public EvalToolWindow(Project project) {
+    public
+    EvalToolWindow(Project project) {
         super(true);
         setProvideQuickActions(false);
 
@@ -54,81 +56,93 @@ public class EvalToolWindow extends SimpleToolWindowPanel {
         fsTreeRef.set(fsTree);
         JScrollPane scrollPane = new JBScrollPane(fsTree.getTree());
         setContent(scrollPane);
-        
+        setToolbar(createToolBar());
 
 
     }
 
-    public Collection<String> getSelectedPluginsIDs(){
-        //TODO: this is also ugly
-     return virtualFilesToIDs(findPluginRootsFor(fsTreeRef.get().getSelectedFiles()));
-    }
-
-    public Collection<URI>  getSelectedPluginsBasePaths(){
-        //TODO: this is ugly!
-        return virtualFilesToURI(findPluginRootsFor(fsTreeRef.get().getSelectedFiles()));
-    }
-    private static Collection<String> virtualFilesToIDs(Collection<VirtualFile> files){
+    private static
+    Collection<String> virtualFilesToIDs(Collection<VirtualFile> files) {
         Collection<String> ret = new ArrayList<String>(files.size());
-        for(VirtualFile file: files){
+        for (VirtualFile file : files) {
             ret.add(file.getName());
         }
         return ret;
     }
 
-    private static Collection<URI> virtualFilesToURI(Collection<VirtualFile> virtualFiles){
+    private static
+    Collection<URI> virtualFilesToURI(Collection<VirtualFile> virtualFiles) {
         Collection<URI> ret = new ArrayList<URI>(virtualFiles.size());
-        for(VirtualFile file:virtualFiles){
+        for (VirtualFile file : virtualFiles) {
             ret.add(URI.create(file.getPath()));
         }
 
         return ret;
     }
 
-    private static Collection<VirtualFile> findPluginRootsFor(VirtualFile[] files){
+    private static
+    Collection<VirtualFile> findPluginRootsFor(VirtualFile[] files) {
         Set<VirtualFile> ret = new HashSet<VirtualFile>();
-        for(VirtualFile file: files){
+        for (VirtualFile file : files) {
             VirtualFile root = pluginFolderOf(file);
-            if(root!=null) ret.add(root);
+            if (root != null) ret.add(root);
 
         }
 
         return ret;
     }
 
-    private static VirtualFile pluginFolderOf(VirtualFile file){
+    private static
+    VirtualFile pluginFolderOf(VirtualFile file) {
         VirtualFile parent = file.getParent();
-        if(parent==null) return null;
+        if (parent == null) return null;
         String base = EvalComponent.pluginsRootPath();
 
-        if(!base.equals(parent.getPath())){
+        if (!base.equals(parent.getPath())) {
             return pluginFolderOf(parent);
 
         }
-      return file;
+        return file;
     }
 
-    private static JComponent createToolBar(){
+    private static
+    JComponent createToolBar() {
         JPanel toolbarPanel = new JPanel(new GridLayout());
-          DefaultActionGroup actionGroup = new DefaultActionGroup();
+        DefaultActionGroup actionGroup = new DefaultActionGroup();
+        actionGroup.add(new RunPluginAction());
 
+        String place = ActionPlaces.EDITOR_TOOLBAR;
+        toolbarPanel.add(ActionManager.getInstance().createActionToolbar(place, actionGroup, true).getComponent());
 
         return toolbarPanel;
     }
 
-    private static FileSystemTree createFSTree(Project project) {
+    private static
+    FileSystemTree createFSTree(Project project) {
         Ref<FileSystemTree> fsTreeRef = Ref.create();
         MyTree myTree = new MyTree(project);
 
         //  EditSourceOnDoubleClickHandler.install(myTree, new DisableHighlightingRunnable(project, myFsTreeRef));
         EditSourceOnDoubleClickHandler.install(myTree);
 
-        FileSystemTree ret = new FileSystemTreeImpl(project, new EvalFileChooserDescriptor(), myTree, null, null, null) {
+        FileSystemTree ret = new FileSystemTreeImpl(project,
+                                                    new EvalFileChooserDescriptor(),
+                                                    myTree,
+                                                    null,
+                                                    null,
+                                                    null) {
             @Override
-            protected AbstractTreeBuilder createTreeBuilder(JTree tree, DefaultTreeModel treeModel, AbstractTreeStructure treeStructure, Comparator<NodeDescriptor> comparator, FileChooserDescriptor descriptor, @Nullable Runnable onInitialized) {
+            protected
+            AbstractTreeBuilder createTreeBuilder(JTree tree,
+                                                  DefaultTreeModel treeModel,
+                                                  AbstractTreeStructure treeStructure,
+                                                  Comparator<NodeDescriptor> comparator,
+                                                  FileChooserDescriptor descriptor,
+                                                  @Nullable Runnable onInitialized) {
                 return new FileTreeBuilder(tree, treeModel, treeStructure, comparator, descriptor, onInitialized) {
                     @Override
-                    protected boolean isAutoExpandNode(NodeDescriptor nodeDescriptor) {
+                    protected
+                    boolean isAutoExpandNode(NodeDescriptor nodeDescriptor) {
                         return nodeDescriptor.getElement() instanceof RootFileElement;
                     }
                 };
@@ -136,43 +150,63 @@ public class EvalToolWindow extends SimpleToolWindowPanel {
         };
 
         fsTreeRef.set(ret);
-      //  EditSourceOnEnterKeyHandler.install(myTree, new DisableHighlightingRunnable(project, myFsTreeRef));
+        //  EditSourceOnEnterKeyHandler.install(myTree, new DisableHighlightingRunnable(project, myFsTreeRef));
         EditSourceOnDoubleClickHandler.install(myTree);
 
         return ret;
     }
 
-    public static EvalToolWindow getInstance(Project project) {
+    public static
+    EvalToolWindow getInstance(Project project) {
         return ServiceManager.getService(project, EvalToolWindow.class);
     }
 
-    private static class MyTree extends Tree implements TypeSafeDataProvider {
+    public
+    Collection<String> getSelectedPluginsIDs() {
+        //TODO: this is also ugly
+        return virtualFilesToIDs(findPluginRootsFor(fsTreeRef.get().getSelectedFiles()));
+    }
+
+    public
+    Collection<URI> getSelectedPluginsBasePaths() {
+        //TODO: this is ugly!
+        return virtualFilesToURI(findPluginRootsFor(fsTreeRef.get().getSelectedFiles()));
+    }
+
+    private static
+    class MyTree extends Tree implements TypeSafeDataProvider {
 
         private final Project project;
         private final DeleteProvider deleteWithRefresh = new DelegatingDeleteProvider() {
             @Override
-            public void deleteElement(@NotNull DataContext dataContext) {
+            public
+            void deleteElement(@NotNull DataContext dataContext) {
                 super.deleteElement(dataContext);
                 //TODO refresh
             }
         };
 
-        private MyTree(Project project) {
+        private
+        MyTree(Project project) {
             this.project = project;
             getEmptyText().setText("No plugins to show");
             setRootVisible(false);
         }
 
         @Override
-        public void calcData(DataKey key, DataSink sink) {
+        public
+        void calcData(DataKey key, DataSink sink) {
             if (key == PlatformDataKeys.NAVIGATABLE_ARRAY) { // need this to be able to open files in toolwindow on double-click/enter
-                List<FileNodeDescriptor> nodeDescriptors = TreeUtil.collectSelectedObjectsOfType(this, FileNodeDescriptor.class);
+                List<FileNodeDescriptor> nodeDescriptors = TreeUtil.collectSelectedObjectsOfType(this,
+                                                                                                 FileNodeDescriptor.class);
                 List<Navigatable> navigatables = new ArrayList<Navigatable>();
                 for (FileNodeDescriptor nodeDescriptor : nodeDescriptors) {
                     navigatables.add(new OpenFileDescriptor(project, nodeDescriptor.getElement().getFile()));
                 }
-                sink.put(PlatformDataKeys.NAVIGATABLE_ARRAY, navigatables.toArray(new Navigatable[navigatables.size()]));
-            } else if (key == PlatformDataKeys.DELETE_ELEMENT_PROVIDER) {
+                sink.put(PlatformDataKeys.NAVIGATABLE_ARRAY,
+                         navigatables.toArray(new Navigatable[navigatables.size()]));
+            }
+            else if (key == PlatformDataKeys.DELETE_ELEMENT_PROVIDER) {
                 sink.put(PlatformDataKeys.DELETE_ELEMENT_PROVIDER, deleteWithRefresh);
             }
         }

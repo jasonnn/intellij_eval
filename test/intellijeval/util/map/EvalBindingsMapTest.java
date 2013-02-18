@@ -53,7 +53,7 @@ class EvalBindingsMapTest {
         map.put("cached", "orig");
         map.put("cached", "changed");
         assert "orig".equals(map.get("cached"));
-        assert map.get("orig").equals(delegate.get("orig"));
+        assert map.get("cached").equals(delegate.get("cached"));
 
     }
 }

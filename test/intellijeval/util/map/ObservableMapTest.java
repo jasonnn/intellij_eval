@@ -48,7 +48,7 @@ class ObservableMapTest {
         assert myListener.getRemoves() == 2;
 
 
-        assert delegate.size()==1;
+        assert delegate.size() == 1;
         assert delegate.get("one").equals(om.get("one"));
         assert delegate.get("one").equals(1);
 
@@ -78,10 +78,62 @@ class ObservableMapTest {
 
     }
 
+    @Test
+    public
+    void testPutAll() {
+        Veto veto = new Veto();
+        om.addListener(veto);
+
+        Map<String, Integer> addAll = new HashMap<String, Integer>() {
+            {
+                put("one", 1);
+                put("two", 2);
+                put("dontAdd", 3);
+                put("dontRemove", 4);
+            }
+        };
+
+        om.putAll(addAll);
+        assert delegate.size() == 3;
+        assert om.size() == 3;
+        assert veto.getAdds() == 3;
+
+
+    }
+
+    @Test
+    public
+    void testClear() throws Exception {
+        Veto veto = new Veto();
+        veto.ensureAllowCalledFirst = false;
+        om.addListener(veto);
+
+        Map<String, Integer> addAll = new HashMap<String, Integer>() {
+            {
+                put("one", 1);
+                put("two", 2);
+                put("dontAdd", 3);
+                put("dontRemove", 4);
+            }
+        };
+        om.putAll(addAll);
+
+        assert veto.getAdds() == 3;
+        assert veto.getRemoves()==0;
+        om.clear();
+
+        assert delegate.size() == 0;
+        assert om.size() == 0;
+        assert veto.getRemoves() == 3;
+
+
+    }
+
     static
     class Veto extends CountingListener<String, Integer> implements ObservableMap.VetoableListener<String, Integer> {
         boolean allowAddCalled = false;
         boolean allowRemoveCalled = false;
+        boolean ensureAllowCalledFirst = true;
 
         void reset() {
             allowAddCalled = false;
@@ -107,7 +159,8 @@ class ObservableMapTest {
         @Override
         public
         void entryAdded(String key, Integer value) {
-            assert allowAddCalled : "allowAdd should be called before entryAdded";
+            if (ensureAllowCalledFirst) assert allowAddCalled : "allowAdd should be called before entryAdded";
+
             allowAddCalled = false;
             super.entryAdded(key,
                              value);
@@ -116,7 +169,7 @@ class ObservableMapTest {
         @Override
         public
         void entryRemoved(String key) {
-            assert allowRemoveCalled : "allowRemove Should be called before entryRemoved";
+            if (ensureAllowCalledFirst) assert allowRemoveCalled : "allowRemove Should be called before entryRemoved";
             allowRemoveCalled = false;
             super.entryRemoved(key);
         }

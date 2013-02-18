@@ -7,7 +7,7 @@ package util
  * Time: 12:51 PM
  * To change this template use File | Settings | File Templates.
  */
-class Util {
+class TestUtil {
 
 
     static final def filter = new FileFilter() {
@@ -19,7 +19,7 @@ class Util {
     }
 
     static File getProjectDir() {
-        def url = Util.class.protectionDomain.codeSource.getLocation()
+        def url = TestUtil.class.protectionDomain.codeSource.getLocation()
 
         return getProjectDir(new File(url.toURI()))
     }

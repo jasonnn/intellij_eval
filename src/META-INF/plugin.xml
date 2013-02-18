@@ -66,10 +66,10 @@ How to use:
      <errorHandler id="MyErrorHandler" implementation="intellijeval.util.MyErrorReportSubmitter" order="first"/>
     </extensions>
 
-    <project-components>
+    <!--<project-components>-->
 
-        <component>
-            <implementation-class>intellijeval.project.EvalProjectComponent</implementation-class>
-        </component>
-    </project-components>
+        <!--<component>-->
+            <!--<implementation-class>intellijeval.project.EvalProjectComponent</implementation-class>-->
+        <!--</component>-->
+    <!--</project-components>-->
 </idea-plugin>

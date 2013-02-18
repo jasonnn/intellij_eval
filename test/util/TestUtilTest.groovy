@@ -9,11 +9,11 @@ import org.junit.Test
  * Time: 1:06 PM
  * To change this template use File | Settings | File Templates.
  */
-class UtilTest {
+class TestUtilTest {
 
     @Test
     public void 'getProjectDir() should find this projects base dir'(){
-      def base = Util.projectDir
+      def base = TestUtil.projectDir
         assert base != null
         assert base.exists()
 
@@ -23,7 +23,7 @@ class UtilTest {
 
     @Test
     public void 'getTestDir() should work'(){
-        def testDir = Util.testDir
+        def testDir = TestUtil.testDir
         assert testDir != null
         assert testDir.exists()
 

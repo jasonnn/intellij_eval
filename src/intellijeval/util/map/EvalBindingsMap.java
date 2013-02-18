@@ -1,10 +1,10 @@
 package intellijeval.util.map;
 
+import groovy.lang.Binding;
 import groovy.lang.Closure;
 import intellijeval.util.RefType;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,26 +13,47 @@ import java.util.concurrent.Callable;
  * Time: 2:32 PM
  * To change this template use File | Settings | File Templates.
  */
-public class EvalBindingsMap extends CachingObservableMap<String,Object> {
+public
+class EvalBindingsMap extends CachingObservableMap<String, Object> {
 
-    public EvalBindingsMap(Map<String, Object> delegate) {
+    private final Binding binding = new Binding(this);
+
+    public
+    EvalBindingsMap(Map<String, Object> delegate) {
         super(delegate);
     }
 
-    public EvalBindingsMap(Map<String, Object> map, RefType refType) {
+    public
+    EvalBindingsMap(Map<String, Object> map, RefType refType) {
         super(map, refType);
     }
 
-    @Override
-    public Object put(String key, Object value) {
-        return value instanceof Callable ? super.put(key,handleCallable(value)) : super.put(key,value);
+    public
+    Binding getBinding() {
+        return binding;
     }
 
-        private Object handleCallable(Object callable) {
+    @Override
+    public
+    Object put(String key, Object value) {
+        return value instanceof Closure ? super.put(key, handleClosure(value)) : super.put(key, value);
+    }
+
+    private
+    Object handleClosure(Object closure) {
         Object result = null;
         try {
-            result = ((Callable) callable).call();
-        } catch (Exception e) {
+            result = ((Closure) closure).call();
+            if (result instanceof Closure) {
+                Closure c = (Closure) result;
+                c = c.dehydrate();
+                c.setResolveStrategy(Closure.DELEGATE_ONLY);
+                c.setDelegate(binding);
+            }
+
+
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         return result;

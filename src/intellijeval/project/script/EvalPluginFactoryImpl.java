@@ -5,6 +5,7 @@ import com.intellij.openapi.util.Disposer;
 import intellijeval.EvalAppService;
 import intellijeval.project.EvalPlugin;
 import intellijeval.project.EvalProjectService;
+import intellijeval.project.PluginUtil;
 import intellijeval.project.script.ctx.EvalContextFactory;
 
 import java.io.File;
@@ -36,7 +37,7 @@ public class EvalPluginFactoryImpl implements EvalPluginFactory {
     }
 
     public EvalPluginFactoryImpl(EvalProjectService projectService) {
-        this(projectService, EvalAppService.getInstance(), projectService, Collections.singleton(new File(ScriptUtil.getEvalBasePath())), null);
+        this(projectService, EvalAppService.getInstance(), projectService, Collections.singleton(new File(PluginUtil.getDefaultBasePath())), null);
     }
 
     @Override
@@ -50,7 +51,7 @@ public class EvalPluginFactoryImpl implements EvalPluginFactory {
 
     private File findPluginFolder(String name) throws FileNotFoundException {
         for (File root : dirsToSearch) {
-            for (File pluginDir : ScriptUtil.getPluginDirs(root)) {
+            for (File pluginDir : PluginUtil.getPluginDirs(root)) {
                 if (pluginDir.getName().equals(name)) return pluginDir;
             }
         }
