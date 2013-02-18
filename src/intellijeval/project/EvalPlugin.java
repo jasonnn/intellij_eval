@@ -6,7 +6,7 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.util.GroovyScriptEngine;
 import intellijeval.EvalAppService;
-import intellijeval.project.script.EvalContext;
+import intellijeval.project.script.ctx.EvalContext;
 import intellijeval.util.map.EvalBindingsMap;
 import intellijeval.util.map.cache.CacheMapAdapterThingForBinding;
 
@@ -23,7 +23,8 @@ import java.net.URI;
 //TODO: this class is particularly bad
 //TODO: also look into using the ij message system to synchronize map views
 // http://confluence.jetbrains.com/display/IDEADEV/IntelliJ+IDEA+Messaging+infrastructure
-public class EvalPlugin implements Disposable {
+public
+class EvalPlugin implements Disposable {
     private final String id;
     private final URI pluginBase;
     private final EvalContext context;
@@ -37,7 +38,14 @@ public class EvalPlugin implements Disposable {
     private CacheMapAdapterThingForBinding projectContributions;
 
 
-    public EvalPlugin(String id, URI pluginBase, EvalContext context, Project project, EvalProjectService projectService, EvalAppService appService) {
+    public
+    EvalPlugin(String id,
+               URI pluginBase,
+               EvalContext context,
+               Project project,
+               EvalProjectService projectService,
+               EvalAppService appService) {
+
         this.id = id;
         this.pluginBase = pluginBase;
         this.context = context;
@@ -46,27 +54,31 @@ public class EvalPlugin implements Disposable {
         this.appService = appService;
     }
 
-
-    public Binding createBinding() {
+    public
+    Binding createBinding() {
 
 
         return null;//TODO
     }
 
-    public String getId() {
+    public
+    String getId() {
         return id;
     }
 
-    public URI getPluginBase() {
+    public
+    URI getPluginBase() {
         return pluginBase;
     }
 
-    public EvalContext getContext() {
+    public
+    EvalContext getContext() {
         return context;
     }
 
     @Override
-    public void dispose() {
+    public
+    void dispose() {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 }

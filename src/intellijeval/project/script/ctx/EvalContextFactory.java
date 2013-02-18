@@ -1,7 +1,5 @@
 package intellijeval.project.script.ctx;
 
-import intellijeval.project.script.EvalContext;
-
 /**
  * Created with IntelliJ IDEA.
  * User: jason

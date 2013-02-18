@@ -1,6 +1,6 @@
 package intellijeval.project.script.ctx.out;
 
-import intellijeval.project.script.ScriptOutputHandler;
+import intellijeval.project.script.ctx.ScriptOutputHandler;
 
 import java.io.PrintStream;
 

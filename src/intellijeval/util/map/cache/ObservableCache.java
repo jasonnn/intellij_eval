@@ -26,12 +26,15 @@ public class ObservableCache<K,V> extends ForwardingCache<K,V> {
 
 
 
+
+
     private final Cache<K,V> delegate;
     private final Set<Listener<K,V>> listeners;
 
     public ObservableCache(Cache<K, V> delegate) {
         this.delegate = delegate;
         this.listeners=Collections.newSetFromMap(new WeakHashMap<Listener<K, V>, Boolean>());
+
     }
 
     public ObservableCache(Cache<K,V> delegate,Set<Listener<K,V>>listenerList){

@@ -55,7 +55,7 @@ class ScriptingTests {
 //        def cls = gse.loadScriptByName('MyScript2.groovy')
 //        assert cls != null
 
-        def bindings = [ctx: new TestContext()]
+        def bindings = [ctx: new TestCtx()]
         def scrpt = gse.createScript('MyScript2.groovy', new Binding(bindings))
         scrpt.run()
 
@@ -64,34 +64,7 @@ class ScriptingTests {
 
     }
 
-    class TestContext extends AbstractEvalContext {
 
-        protected TestContext() {
-            super(new PrintStreamHandler())
-        }
-
-        @Override
-        def <T> T runOnce(String id, Closure<T> closure) {
-            println "ScriptingTests\$TestContext.runOnce"
-        }
-
-        @Override
-        Object handlePropertyMissing(String name) throws MissingPropertyException {
-            println "ScriptingTests\$TestContext.handlePropertyMissing"
-           //throw new MissingPropertyException(name)
-        }
-
-        @Override
-        Object handlePropertyMissing(String name, Object value) throws MissingPropertyException {
-            println "ScriptingTests\$TestContext.handlePropertyMissing"
-        }
-
-        @Override
-        Object handleMethodMissing(String name, Object[] args) throws MissingMethodException {
-            println "ScriptingTests\$TestContext.handleMethodMissing"
-
-        }
-    }
 
 
     static URL[] getRoots() {

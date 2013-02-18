@@ -1,4 +1,4 @@
-package intellijeval.project.script;
+package intellijeval.project.script.ctx;
 
 /**
  * Created with IntelliJ IDEA.

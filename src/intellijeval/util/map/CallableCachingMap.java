@@ -22,6 +22,7 @@ public class CallableCachingMap<K,V> extends CachingMap<K,V> {
                 ? super.get(key) : value instanceof Callable
                 ? super.put(key, handleCallable(value)) : super.put(key, value);
     }
+
     private V handleCallable(Object o){
         V result = null;
         try {

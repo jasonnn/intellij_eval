@@ -1,12 +1,8 @@
 package intellijeval.project.script;
 
-import groovy.lang.Script;
-
-
+import com.intellij.openapi.diagnostic.Logger;
 import groovy.lang.*;
-import groovy.util.slurpersupport.GPathResult;
-
-import java.util.Arrays;
+import intellijeval.project.script.ctx.EvalContext;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,119 +11,164 @@ import java.util.Arrays;
  * Time: 9:24 PM
  * To change this template use File | Settings | File Templates.
  */
-public abstract class EvalScriptBase extends Script {
+public abstract
+class EvalScriptBase extends Script {
 
+    private static final Logger log = Logger.getInstance(EvalScriptBase.class);
     private EvalContext ctx;
 
-    protected EvalScriptBase() {
-        System.out.println("EvalScriptBase.EvalScriptBase");
+    protected
+    EvalScriptBase() {
         setMetaClass(getMetaClass());
-
     }
 
-    protected EvalScriptBase(Binding binding) {
+    protected
+    EvalScriptBase(Binding binding) {
         super(binding);
-        System.out.println("EvalScriptBase.EvalScriptBase(Binding)");
-
         getCtx();
         setMetaClass(getMetaClass());
     }
 
+    //see groovy.util.slurpersupport.GPathResult#setMetaClass
+    @Override
+    public
+    void setMetaClass(MetaClass metaClass) {
+        MetaClass newMetaClass = new DelegatingMetaClass(metaClass) {
+            @Override
+            public
+            Object getAttribute(Object object, String attribute) {
+                Object attrib;
+                try {
+                    attrib = super.getAttribute(object, attribute);
+                }
+                catch (MissingFieldException e) {
+                    if (ctx != null) {
+                        attrib = ctx.handleMissingAttribute(attribute);
+                    }
+                    else {
+                        throw e;
+                    }
+                }
+                return attrib;
+            }
 
+            @Override
+            public
+            void setAttribute(final Object object, final String attribute, final Object newValue) {
+                try {
+                    super.setAttribute(object, attribute, newValue);
+                }
+                catch (MissingFieldException e) {
+                    if (ctx != null) {
+                        ctx.handleMissingAttribute(attribute, newValue);
+                    }
+                    else {
+                        throw e;
+                    }
+                }
+            }
+        };
+        super.setMetaClass(newMetaClass);
+    }
 
-    private void getCtx() {
-        Binding b = getBinding();
-         if (b.hasVariable("ctx")) ctx= (EvalContext) b.getVariable("ctx");
+    private
+    void getCtx() {
+        if (ctx == null) {
+            Binding b = getBinding();
+            if (b.hasVariable("ctx")) ctx = (EvalContext) b.getVariable("ctx");
+            else log.warn("script has no context!");
+        }
     }
 
     @Override
-    public void setBinding(Binding binding) {
+    public
+    void setBinding(Binding binding) {
         super.setBinding(binding);
         getCtx();
     }
 
-    public <T> T runOnce(String id, Closure<T> closure) {
-        return ctx.runOnce(id, closure);
-    }
-
-
-    //see groovy.util.slurpersupport.GPathResult#setMetaClass
     @Override
-    public void setMetaClass(MetaClass metaClass) {
-        System.out.println("EvalScriptBase.setMetaClass");
-        MetaClass newMetaClass = new DelegatingMetaClass(metaClass){
-            @Override
-            public Object getAttribute(Object object, String attribute) {
-              return EvalScriptBase.this.getProperty("@"+attribute);
-            }
-
-            @Override
-            public void setAttribute(final Object object, final String attribute, final Object newValue) {
-                EvalScriptBase.this.setProperty("@" + attribute, newValue);
-            }
-        }  ;
-
-        super.setMetaClass(newMetaClass);
-    }
-
-    public Object propertyMissing(String name) throws MissingPropertyException {
-//        System.out.println("EvalScriptBase.propertyMissing[getter]");
-//        System.out.println("name = [" + name + "]");
-        if (ctx != null) {
-            return ctx.handlePropertyMissing(name);
-        } else {
-            throw new MissingPropertyException(name, getClass());
-        }
-
-    }
-
-    public Object propertyMissing(String name, Object value) throws MissingPropertyException{
-//        System.out.println("EvalScriptBase.propertyMissing[setter]");
-//        System.out.println("name = [" + name + "], value = [" + value + "]");
-        if (ctx != null) {
-           return ctx.handlePropertyMissing(name,value);
-        } else {
-            throw new MissingPropertyException(name,getClass());
-        }
-    }
-
-    public Object methodMissing(String name,Object args){
-//        System.out.println("EvalScriptBase.methodMissing");
-//        System.out.println("name = [" + name + "], args = [" + args + "]");
-        if (ctx != null) {
-          return  ctx.handleMethodMissing(name, (Object[]) args);
-        } else {
-            throw new MissingMethodException(name,getClass(), (Object[]) args);
-        }
-    }
-
-    @Override
-    public void println() {
+    public
+    void println() {
         if (ctx == null) super.println();
         else ctx.println("\n");
     }
 
     @Override
-    public void print(Object value) {
+    public
+    void print(Object value) {
         if (ctx == null) super.print(value);
         else ctx.print(value);
     }
 
     @Override
-    public void println(Object value) {
+    public
+    void println(Object value) {
         if (ctx == null) super.println(value);
         else ctx.println(value);
     }
 
     @Override
-    public void printf(String format, Object value) {
+    public
+    void printf(String format, Object value) {
         if (ctx == null) super.printf(format, value);
         else ctx.printf(format, value);
     }
 
     @Override
-    public void printf(String format, Object[] values) {
+    public
+    void printf(String format, Object[] values) {
         if (ctx == null) super.printf(format, values);
         else ctx.printf(format, values);
+    }
+
+    public
+    <T> T runOnce(String id, Closure<T> closure) {
+        if (ctx != null) return ctx.runOnce(id, closure);
+        else {
+            log.warn("runOnce: no context");
+            return closure.call();
+        }
+    }
+
+    public
+    <T> void dispose(Closure<T> closure) {
+        if (ctx != null) {
+            ctx.disposeCallback(closure);
+        }
+    }
+
+    public
+    Object propertyMissing(String name) throws MissingPropertyException {
+
+        if (ctx != null) {
+            return ctx.handleMissingProperty(name);
+        }
+        else {
+            throw new MissingPropertyException(name, getClass());
+        }
+
+    }
+
+    public
+    Object propertyMissing(String name, Object value) throws MissingPropertyException {
+
+        if (ctx != null) {
+            return ctx.handleMissingProperty(name, value);
+        }
+        else {
+            throw new MissingPropertyException(name, getClass());
+        }
+    }
+
+    public
+    Object methodMissing(String name, Object args) {
+
+        if (ctx != null) {
+            return ctx.handleMissingMethod(name, (Object[]) args);
+        }
+        else {
+            throw new MissingMethodException(name, getClass(), (Object[]) args);
+        }
     }
 }

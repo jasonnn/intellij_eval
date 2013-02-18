@@ -20,7 +20,7 @@ public class EvalBindingsMap extends CachingObservableMap<String,Object> {
     }
 
     public EvalBindingsMap(Map<String, Object> map, RefType refType) {
-        super(map, refType);    //To change body of overridden methods use File | Settings | File Templates.
+        super(map, refType);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class EvalBindingsMap extends CachingObservableMap<String,Object> {
         try {
             result = ((Callable) callable).call();
         } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
         return result;
     }

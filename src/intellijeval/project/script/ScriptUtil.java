@@ -40,7 +40,7 @@ public class ScriptUtil {
 
     }
 
-    public static final FileFilter FILE_FILTER = new FileFilter() {
+    private static final FileFilter FILE_FILTER = new FileFilter() {
         @Override
         public boolean accept(File pathname) {
             return !pathname.isDirectory();
@@ -73,7 +73,6 @@ public class ScriptUtil {
 
     public static Collection<File> getPluginDirs(File base){
         Set<File> ret = new HashSet<File>();
-       // File base = new File(getEvalBasePath());
        File[] dirs= base.listFiles(DirectoryFilter.INSTANCE) ;
 
         if(dirs==null || dirs.length==0) return Collections.emptySet();

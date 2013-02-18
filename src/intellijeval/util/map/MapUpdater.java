@@ -28,7 +28,7 @@ public class MapUpdater<K,V> implements ObservableMap.Listener<K,V> {
     }
 
     @Override
-    public void entryRemoved(K key, V value) {
+    public void entryRemoved(K key) {
         target.remove(key);
     }
 }
