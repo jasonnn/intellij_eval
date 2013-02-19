@@ -37,6 +37,9 @@ import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.keymap.KeymapManager
+import com.intellij.openapi.progress.PerformInBackgroundOption
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.project.ProjectManagerAdapter
@@ -53,14 +56,17 @@ import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiManager
 import com.intellij.ui.content.ContentFactory
 import com.intellij.unscramble.UnscrambleDialog
+import com.intellij.util.ui.UIUtil
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 
 import javax.swing.*
 import java.awt.*
 import java.util.List
+import java.util.concurrent.atomic.AtomicReference
 
 import static com.intellij.notification.NotificationType.*
+import static com.intellij.openapi.progress.PerformInBackgroundOption.ALWAYS_BACKGROUND
 import static com.intellij.openapi.wm.ToolWindowAnchor.RIGHT
 
 /**
@@ -118,31 +124,33 @@ class PluginUtil {
 	 */
 	static ConsoleView showInNewConsole(@Nullable text, String consoleTitle = "", @NotNull Project project,
 	                                    ConsoleViewContentType contentType = guessContentTypeOf(text)) {
-		if (text instanceof Throwable) {
-			def writer = new StringWriter()
-			text.printStackTrace(new PrintWriter(writer))
-			text = UnscrambleDialog.normalizeText(writer.buffer.toString())
+		ConsoleView console = null
+		UIUtil.invokeAndWaitIfNeeded {
+			if (text instanceof Throwable) {
+				def writer = new StringWriter()
+				text.printStackTrace(new PrintWriter(writer))
+				text = UnscrambleDialog.normalizeText(writer.buffer.toString())
 
-			showInNewConsole(text, consoleTitle, project, contentType)
-		} else {
-			ConsoleView console = TextConsoleBuilderFactory.instance.createBuilder(project).console
-			console.print(asString(text), contentType)
+				console = showInNewConsole(text, consoleTitle, project, contentType)
+			} else {
+				console = TextConsoleBuilderFactory.instance.createBuilder(project).console
+				console.print(asString(text), contentType)
 
-			DefaultActionGroup toolbarActions = new DefaultActionGroup()
-			def consoleComponent = new MyConsolePanel(console, toolbarActions)
-			RunContentDescriptor descriptor = new RunContentDescriptor(console, null, consoleComponent, consoleTitle) {
-				@Override boolean isContentReuseProhibited() { true }
-				@Override Icon getIcon() { AllIcons.Nodes.Plugin }
+				DefaultActionGroup toolbarActions = new DefaultActionGroup()
+				def consoleComponent = new MyConsolePanel(console, toolbarActions)
+				RunContentDescriptor descriptor = new RunContentDescriptor(console, null, consoleComponent, consoleTitle) {
+					@Override boolean isContentReuseProhibited() { true }
+					@Override Icon getIcon() { AllIcons.Nodes.Plugin }
+				}
+				Executor executor = DefaultRunExecutor.runExecutorInstance
+
+				toolbarActions.add(new CloseAction(executor, descriptor, project))
+				console.createConsoleActions().each{ toolbarActions.add(it) }
+
+				ExecutionManager.getInstance(project).contentManager.showRunContent(executor, descriptor)
 			}
-			Executor executor = DefaultRunExecutor.runExecutorInstance
-
-			toolbarActions.add(new CloseAction(executor, descriptor, project))
-			console.createConsoleActions().each{ toolbarActions.add(it) }
-
-			ExecutionManager.getInstance(project).contentManager.showRunContent(executor, descriptor)
-
-			console
 		}
+		console
 	}
 
 	/**
@@ -158,15 +166,17 @@ class PluginUtil {
 	 */
 	static ConsoleView showInConsole(@Nullable text, String consoleTitle = "", @NotNull Project project,
 	                                 ConsoleViewContentType contentType = guessContentTypeOf(text)) {
-		ConsoleView console = consoleToConsoleTitle.find{ it.value == consoleTitle }?.key
-		if (console == null) {
-			console = showInNewConsole(text, consoleTitle, project, contentType)
-			consoleToConsoleTitle[console] = consoleTitle
-			console
-		} else {
-			console.print("\n" + asString(text), contentType)
-			console
+		ConsoleView console = null
+		UIUtil.invokeAndWaitIfNeeded {
+			console = consoleToConsoleTitle.find{ it.value == consoleTitle }?.key
+			if (console == null) {
+				console = showInNewConsole(text, consoleTitle, project, contentType)
+				consoleToConsoleTitle[console] = consoleTitle
+			} else {
+				console.print("\n" + asString(text), contentType)
+			}
 		}
+		console
 	}
 
 	/**
@@ -420,29 +430,64 @@ class PluginUtil {
 	 * {@link com.intellij.openapi.util.UserDataHolder} won't work as well because {@link com.intellij.openapi.util.Key}
 	 * implementation uses incremental numbers as hashCode() (each "new Key()" is different from previous one).
 	 *
-	 * @param key key that identifies value
+	 * @param varName
 	 * @param initialValue
 	 * @param callback should calculate new value given previous one
 	 * @return new value
 	 */
-	static def <T> T getCachedBy(String key, @Nullable initialValue = null, Closure callback) {
+	static <T> T getAndCachedBy(String varName, @Nullable initialValue = null, Closure callback = {it}) {
 		def actionManager = ActionManager.instance
-		def action = actionManager.getAction(key)
+		def action = actionManager.getAction(asActionId(varName))
 
 		def prevValue = (action == null ? initialValue : action.value)
 		T newValue = (T) callback.call(prevValue)
 
 		// unregister action only after callback has been invoked in case it crashes
-		if (action != null) actionManager.unregisterAction(key)
+		if (action != null) actionManager.unregisterAction(asActionId(varName))
 
 		// anonymous class below will keep reference to outer object but that should be ok
 		// because its class is not a part of reloadable plugin
-		actionManager.registerAction(key, new AnAction() {
+		actionManager.registerAction(asActionId(varName), new AnAction() {
 			final def value = newValue
 			@Override void actionPerformed(AnActionEvent e) {}
 		})
 
 		newValue
+	}
+
+	static <T> T setGlobalVar(String varName, @Nullable value) {
+		// TODO
+		null
+	}
+
+	static <T> T getGlobalVar(String varName) {
+		ActionManager.instance.with {
+			def actionIds = getActionIds(asActionId(varName))
+			if (actionIds.length == 0) null
+			else getAction(actionIds.first()).value
+		}
+	}
+
+	static <T> T removeGlobalVar(String varName) {
+		T result = getGlobalVar(varName)
+		ActionManager.instance.unregisterAction(asActionId(varName))
+		result
+	}
+
+	/**
+	 * TODO
+	 *
+	 */
+	static doInBackground(String taskDescription = "", boolean canBeCancelled = true,
+	                      PerformInBackgroundOption backgroundOption = ALWAYS_BACKGROUND,
+	                      Closure task, Closure whenCancelled = {}, Closure whenDone) {
+		AtomicReference result = new AtomicReference(null)
+		new Task.Backgroundable(null, taskDescription, canBeCancelled, backgroundOption) {
+			@Override void run(ProgressIndicator indicator) { result.set(task.call(indicator)) }
+			@Override void onSuccess() { whenDone.call(result.get()) }
+			@Override void onCancel() { whenCancelled.call() }
+
+		}.queue()
 	}
 
 	static accessField(Object o, String fieldName, Closure callback) {
@@ -527,6 +572,10 @@ class PluginUtil {
 		text instanceof Throwable ? ConsoleViewContentType.ERROR_OUTPUT : ConsoleViewContentType.NORMAL_OUTPUT
 	}
 
+	private static asActionId(String globalVarKey) {
+		"IntelliJEval-" + globalVarKey
+	}
+
 	static String asString(message) {
 		message?.class?.isArray() ? Arrays.toString(message) : String.valueOf(message)
 	}
@@ -537,7 +586,7 @@ class PluginUtil {
 	 *
 	 * @author Olivier Smedile
 	 */
-	static transformSelectionIn(Editor editor, Closure transformer) {
+	private static transformSelectionIn(Editor editor, Closure transformer) {
 		SelectionModel selectionModel = editor.selectionModel
 		String selectedText = selectionModel.selectedText
 
