@@ -13,7 +13,7 @@ import intellijeval.project.toolwindow2.EvalToolWindow;
 import intellijeval.util.RefType;
 import intellijeval.util.map.EvalBindingsMap;
 import intellijeval.util.map.ObservableMap;
-import intellijeval.util.map.cache.ObservableCache;
+import intellijeval.util.cache.ObservableCache;
 
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
@@ -39,22 +39,20 @@ class EvalProjectService implements Disposable.Parent {
     };
     private final LoadingCache<String, EvalPlugin> pluginCache =
             CacheBuilder.newBuilder()
-                        //.weakValues()
-                        .expireAfterAccess(5, TimeUnit.MINUTES)
-                        .removalListener(removalListener)
-                        .build(new CacheLoader<String, EvalPlugin>() {
-                            @Override
-                            public
-                            EvalPlugin load(String s) throws Exception {
-                                return pluginFactory.createPlugin(s);
-                            }
-                        });
+                    //.weakValues()
+                    .expireAfterAccess(5, TimeUnit.MINUTES)
+                    .removalListener(removalListener)
+                    .build(new CacheLoader<String, EvalPlugin>() {
+                        @Override
+                        public
+                        EvalPlugin load(String s) throws Exception {
+                            return pluginFactory.createPlugin(s);
+                        }
+                    });
     private final EvalPluginFactory pluginFactory;
     //TODO: implement
     private final
-    ObservableMap.VetoableListener<String, Object> mapListener = new ObservableMap.ListenerAdapter<String,Object>();
-
-
+    ObservableMap.VetoableListener<String, Object> mapListener = new ObservableMap.ListenerAdapter<String, Object>();
     //TODO: for adding project/module libraries.
     private GroovyClassLoader projectClassLoader;
     private EvalBindingsMap projectBindings;
@@ -69,11 +67,6 @@ class EvalProjectService implements Disposable.Parent {
         this.projectBindings2 = new ObservableCache<String, Object>();
         this.pluginFactory = new EvalPluginFactoryImpl(this);
 
-    }
-
-    public static
-    EvalProjectService getInstance(Project project) {
-        return ServiceManager.getService(project, EvalProjectService.class);
     }
 
     public
@@ -136,5 +129,18 @@ class EvalProjectService implements Disposable.Parent {
     public
     void beforeTreeDispose() {
         //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public static
+    class SERVICE {
+        private
+        SERVICE() {
+        }
+
+        public static
+        EvalProjectService getInstance(Project project) {
+            return ServiceManager.getService(project, EvalProjectService.class);
+        }
+
     }
 }

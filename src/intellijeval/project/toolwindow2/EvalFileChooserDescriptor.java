@@ -5,6 +5,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import intellijeval.EvalComponent;
 import intellijeval.Util;
+import intellijeval.project.PluginUtil;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -27,28 +28,14 @@ public class EvalFileChooserDescriptor extends FileChooserDescriptor {
         setShowFileSystemRoots(false);
         setIsTreeRootVisible(false);
 
-        Collection<String> pluginPaths = EvalComponent.pluginIdToPathMap().values();
-        List<VirtualFile> files = convertPathsToVFS(pluginPaths);
-
-         setRoots(files);
 
     }
 
-    private static List<VirtualFile> convertPathsToVFS(Collection<String>paths){
-        if(paths.isEmpty()) return Collections.emptyList();
-        List<VirtualFile> ret = new ArrayList<VirtualFile>(paths.size());
-         VirtualFileManager mgr = VirtualFileManager.getInstance();
-        for(String path: paths){
-           ret.add(mgr.findFileByUrl("file://"+path));
-        }
 
-        return ret;
-
-    }
 
     @Override
     public Icon getIcon(VirtualFile file) {
-        if (EvalComponent.pluginIdToPathMap().values().contains(file.getPath())) return Util.PLUGIN_ICON;
+        if (PluginUtil.isPluginFolder(file)) return Util.PLUGIN_ICON;
         return super.getIcon(file);
     }
 

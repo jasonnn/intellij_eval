@@ -2,6 +2,7 @@ package intellijeval.project;
 
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -23,18 +24,17 @@ public
 class PluginUtil {
 
     private static final URI defaultBase = URI.create("file://" + PathManager.getPluginsPath() + "/intellij-eval-plugins");
-    private static Comparator<URL> urlComparator = new Comparator<URL>() {
-
-        @Override
-        public
-        int compare(URL o1, URL o2) {
-            return o1.getPath().compareTo(o2.getPath());
-        }
-    };
 
     public static
     URI getDefaultBasePath() {
         return defaultBase;
+    }
+
+    public static
+    VirtualFile getDefaultRoot() {
+        VirtualFile file = VirtualFileManager.getInstance().findFileByUrl(getDefaultBasePath().toString());
+        assert file != null;
+        return file;
     }
 
     public static
@@ -104,6 +104,55 @@ class PluginUtil {
     public static
     String uri2Id(URI uri) {
         return dir2Id(new File(uri));
+    }
+
+    public static
+    Collection<String> virtualFilesToIDs(Collection<VirtualFile> files) {
+        Collection<String> ret = new ArrayList<String>(files.size());
+        for (VirtualFile file : files) {
+            ret.add(file.getName());
+        }
+        return ret;
+    }
+
+    public static
+    Collection<URI> virtualFilesToURI(Collection<VirtualFile> virtualFiles) {
+        Collection<URI> ret = new ArrayList<URI>(virtualFiles.size());
+        for (VirtualFile file : virtualFiles) {
+            ret.add(URI.create(file.getPath()));
+        }
+
+        return ret;
+    }
+
+    public static
+    Collection<VirtualFile> findPluginRootsFor(VirtualFile[] files) {
+        Set<VirtualFile> ret = new HashSet<VirtualFile>();
+        for (VirtualFile file : files) {
+            VirtualFile root = pluginFolderOf(file);
+            if (root != null) ret.add(root);
+
+        }
+
+        return ret;
+    }
+
+    public static
+    VirtualFile pluginFolderOf(VirtualFile file) {
+        Deque<VirtualFile> toSearch = new ArrayDeque<VirtualFile>();
+        toSearch.add(file);
+
+        while (file != null) {
+            if (isPluginFolder(file)) return file;
+            else file = file.getParent();
+        }
+
+        return null;
+    }
+
+    public static
+    boolean isPluginFolder(VirtualFile file) {
+        return file.isDirectory() && file.findChild("plugin.groovy") != null;
     }
 
     public static

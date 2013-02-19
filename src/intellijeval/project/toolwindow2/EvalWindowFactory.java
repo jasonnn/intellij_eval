@@ -19,14 +19,8 @@ public class EvalWindowFactory implements ToolWindowFactory,DumbAware {
     @Override
     public void createToolWindowContent(Project project, ToolWindow toolWindow) {
         System.out.println("EvalWindowFactory.createToolWindowContent");
-        // EvalToolWindow window = EvalToolWindow.getInstance(project);
-       // EvalToolWindow window = new EvalToolWindow(project);
-        EvalToolWindow window = EvalProjectService.getInstance(project).getWindow();
-        Content content = ContentFactory.SERVICE.getInstance().createContent(window,"",false);
-
-
-        
-        
+        EvalToolWindow window = EvalProjectService.SERVICE.getInstance(project).getWindow();
+        Content content = ContentFactory.SERVICE.getInstance().createContent(window.getContentPanel(),"",false);
         toolWindow.getContentManager().addContent(content);
 
     }

@@ -28,11 +28,11 @@ public class RunPluginAction extends AnAction {
     }
 
     private void doEval(AnActionEvent event){
-        EvalToolWindow window = EvalToolWindow.getInstance(event.getProject());
+        EvalToolWindow window = EvalToolWindow.SERVICE.getInstance(event.getProject());
         Collection<String> ids = window.getSelectedPluginsIDs();
         if(ids.isEmpty()) return;
         String first = ids.iterator().next();
-        EvalProjectService projectService = EvalProjectService.getInstance(event.getProject());
+        EvalProjectService projectService = EvalProjectService.SERVICE.getInstance(event.getProject());
         EvalPlugin plugin;
         try {
              plugin = projectService.getPlugin(first);

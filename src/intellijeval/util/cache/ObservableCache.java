@@ -1,4 +1,4 @@
-package intellijeval.util.map.cache;
+package intellijeval.util.cache;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

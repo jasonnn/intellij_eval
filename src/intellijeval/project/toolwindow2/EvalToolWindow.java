@@ -1,38 +1,37 @@
 package intellijeval.project.toolwindow2;
 
-import com.intellij.ide.DeleteProvider;
-import com.intellij.ide.util.treeView.AbstractTreeBuilder;
-import com.intellij.ide.util.treeView.AbstractTreeStructure;
-import com.intellij.ide.util.treeView.NodeDescriptor;
+import com.intellij.ide.DataManager;
+import com.intellij.ide.actions.CollapseAllAction;
+import com.intellij.ide.actions.ExpandAllAction;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileSystemTree;
-import com.intellij.openapi.fileChooser.ex.FileNodeDescriptor;
-import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
-import com.intellij.openapi.fileChooser.ex.RootFileElement;
-import com.intellij.openapi.fileChooser.impl.FileTreeBuilder;
+import com.intellij.openapi.fileChooser.FileSystemTreeFactory;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
-import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.pom.Navigatable;
-import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.treeStructure.Tree;
-import com.intellij.util.EditSourceOnDoubleClickHandler;
-import com.intellij.util.ui.tree.TreeUtil;
-import intellijeval.EvalComponent;
+import com.intellij.ui.ScrollPaneFactory;
+import com.intellij.util.EditSourceOnEnterKeyHandler;
+import com.intellij.util.OpenSourceUtil;
+import intellijeval.Util;
+import intellijeval.project.PluginUtil;
 import intellijeval.project.RunPluginAction;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import static intellijeval.project.PluginUtil.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -40,175 +39,148 @@ import java.util.List;
  * Date: 2/11/13
  * Time: 2:17 PM
  * To change this template use File | Settings | File Templates.
+ *
+ * @see {@link com.intellij.platform.FilesystemToolwindow}
  */
 public
-class EvalToolWindow extends SimpleToolWindowPanel {
+class EvalToolWindow implements Disposable {
     private static final String ServiceID = "EvalWindow";
-    private final Ref<FileSystemTree> fsTreeRef = Ref.create();
+    private FileSystemTree fsTree;
+    private MyContentPanel contentPanel;
+    private Project project;
+    private List<VirtualFile> selectedFiles;
 
     public
     EvalToolWindow(Project project) {
-        super(true);
-        setProvideQuickActions(false);
 
 
-        FileSystemTree fsTree = createFSTree(project);
-        fsTreeRef.set(fsTree);
-        JScrollPane scrollPane = new JBScrollPane(fsTree.getTree());
-        setContent(scrollPane);
-        setToolbar(createToolBar());
+        this.project = project;
+        this.contentPanel = new MyContentPanel();
 
+        EvalFileChooserDescriptor descriptor = new EvalFileChooserDescriptor();
+        descriptor.setRoots(PluginUtil.getDefaultRoot()); //TODO: ctor param
+
+        FileSystemTreeFactory factory = FileSystemTreeFactory.SERVICE.getInstance();
+        fsTree = factory.createFileSystemTree(project, descriptor);
+        DefaultActionGroup actionGroup = factory.createDefaultFileSystemActions(fsTree);
+        contentPanel.setToolbar(createToolbar(actionGroup));
+        contentPanel.setContent(ScrollPaneFactory.createScrollPane(fsTree.getTree()));
+
+        intsallOpenFileHandlers(fsTree.getTree());
+
+        //TODO: this isnt working either
+        //why is fsTree always showing null for selectedFiles?
+        fsTree.addListener(new FileSystemTree.Listener() {
+            @Override
+            public
+            void selectionChanged(List<VirtualFile> selection) {
+                selectedFiles = new ArrayList<VirtualFile>(selection);
+            }
+        }, this);
+
+        fsTree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+    }
+
+    private static
+    void intsallOpenFileHandlers(JTree component) {
+        EditSourceOnEnterKeyHandler.install(component);
+        component.addMouseListener(new MouseAdapter() {
+            @Override
+            public
+            void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    DataContext dataContext = DataManager.getInstance().getDataContext((Component) e.getSource());
+                    Project p = PlatformDataKeys.PROJECT.getData(dataContext);
+                    assert p != null;
+                    OpenSourceUtil.openSourcesFrom(dataContext, false);
+                }
+            }
+        });
 
     }
 
     private static
-    Collection<String> virtualFilesToIDs(Collection<VirtualFile> files) {
-        Collection<String> ret = new ArrayList<String>(files.size());
-        for (VirtualFile file : files) {
-            ret.add(file.getName());
-        }
-        return ret;
+    AnAction withIcon(Icon icon, AnAction action) {
+        action.getTemplatePresentation().setIcon(icon);
+        return action;
     }
 
     private static
-    Collection<URI> virtualFilesToURI(Collection<VirtualFile> virtualFiles) {
-        Collection<URI> ret = new ArrayList<URI>(virtualFiles.size());
-        for (VirtualFile file : virtualFiles) {
-            ret.add(URI.create(file.getPath()));
-        }
+    JComponent createToolbar(DefaultActionGroup actionGroup) {
+        actionGroup.add(new RunPluginAction(), Constraints.FIRST);
+        actionGroup.addSeparator();
+        actionGroup.add(withIcon(Util.EXPAND_ALL_ICON, new ExpandAllAction()));
+        actionGroup.add(withIcon(Util.COLLAPSE_ALL_ICON, new CollapseAllAction()));
 
-        return ret;
-    }
-
-    private static
-    Collection<VirtualFile> findPluginRootsFor(VirtualFile[] files) {
-        Set<VirtualFile> ret = new HashSet<VirtualFile>();
-        for (VirtualFile file : files) {
-            VirtualFile root = pluginFolderOf(file);
-            if (root != null) ret.add(root);
-
-        }
-
-        return ret;
-    }
-
-    private static
-    VirtualFile pluginFolderOf(VirtualFile file) {
-        VirtualFile parent = file.getParent();
-        if (parent == null) return null;
-        String base = EvalComponent.pluginsRootPath();
-
-        if (!base.equals(parent.getPath())) {
-            return pluginFolderOf(parent);
-
-        }
-        return file;
-    }
-
-    private static
-    JComponent createToolBar() {
         JPanel toolbarPanel = new JPanel(new GridLayout());
-        DefaultActionGroup actionGroup = new DefaultActionGroup();
-        actionGroup.add(new RunPluginAction());
-
         String place = ActionPlaces.EDITOR_TOOLBAR;
         toolbarPanel.add(ActionManager.getInstance().createActionToolbar(place, actionGroup, true).getComponent());
-
         return toolbarPanel;
     }
 
-    private static
-    FileSystemTree createFSTree(Project project) {
-        Ref<FileSystemTree> fsTreeRef = Ref.create();
-        MyTree myTree = new MyTree(project);
-
-        //  EditSourceOnDoubleClickHandler.install(myTree, new DisableHighlightingRunnable(project, myFsTreeRef));
-        EditSourceOnDoubleClickHandler.install(myTree);
-
-        FileSystemTree ret = new FileSystemTreeImpl(project,
-                                                    new EvalFileChooserDescriptor(),
-                                                    myTree,
-                                                    null,
-                                                    null,
-                                                    null) {
-            @Override
-            protected
-            AbstractTreeBuilder createTreeBuilder(JTree tree,
-                                                  DefaultTreeModel treeModel,
-                                                  AbstractTreeStructure treeStructure,
-                                                  Comparator<NodeDescriptor> comparator,
-                                                  FileChooserDescriptor descriptor,
-                                                  @Nullable Runnable onInitialized) {
-                return new FileTreeBuilder(tree, treeModel, treeStructure, comparator, descriptor, onInitialized) {
-                    @Override
-                    protected
-                    boolean isAutoExpandNode(NodeDescriptor nodeDescriptor) {
-                        return nodeDescriptor.getElement() instanceof RootFileElement;
-                    }
-                };
-            }
-        };
-
-        fsTreeRef.set(ret);
-        //  EditSourceOnEnterKeyHandler.install(myTree, new DisableHighlightingRunnable(project, myFsTreeRef));
-        EditSourceOnDoubleClickHandler.install(myTree);
-
-        return ret;
-    }
-
-    public static
-    EvalToolWindow getInstance(Project project) {
-        return ServiceManager.getService(project, EvalToolWindow.class);
+    public
+    MyContentPanel getContentPanel() {
+        return contentPanel;
     }
 
     public
     Collection<String> getSelectedPluginsIDs() {
+        VirtualFile[] selected = (VirtualFile[]) selectedFiles.toArray();// fsTree.getSelectedFiles();
         //TODO: this is also ugly
-        return virtualFilesToIDs(findPluginRootsFor(fsTreeRef.get().getSelectedFiles()));
+        return virtualFilesToIDs(findPluginRootsFor(selected));
     }
 
     public
     Collection<URI> getSelectedPluginsBasePaths() {
+        VirtualFile[] selected = (VirtualFile[]) selectedFiles.toArray();// fsTree.getSelectedFiles();
+
         //TODO: this is ugly!
-        return virtualFilesToURI(findPluginRootsFor(fsTreeRef.get().getSelectedFiles()));
+        return virtualFilesToURI(findPluginRootsFor(selected));
     }
 
-    private static
-    class MyTree extends Tree implements TypeSafeDataProvider {
+    @Override
+    public
+    void dispose() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 
-        private final Project project;
-        private final DeleteProvider deleteWithRefresh = new DelegatingDeleteProvider() {
-            @Override
-            public
-            void deleteElement(@NotNull DataContext dataContext) {
-                super.deleteElement(dataContext);
-                //TODO refresh
-            }
-        };
-
+    public static
+    class SERVICE {
         private
-        MyTree(Project project) {
-            this.project = project;
-            getEmptyText().setText("No plugins to show");
-            setRootVisible(false);
+        SERVICE() {
         }
 
-        @Override
+        public static
+        EvalToolWindow getInstance(Project project) {
+            return ServiceManager.getService(project, EvalToolWindow.class);
+        }
+    }
+
+    class MyContentPanel extends SimpleToolWindowPanel {
         public
-        void calcData(DataKey key, DataSink sink) {
-            if (key == PlatformDataKeys.NAVIGATABLE_ARRAY) { // need this to be able to open files in toolwindow on double-click/enter
-                List<FileNodeDescriptor> nodeDescriptors = TreeUtil.collectSelectedObjectsOfType(this,
-                                                                                                 FileNodeDescriptor.class);
-                List<Navigatable> navigatables = new ArrayList<Navigatable>();
-                for (FileNodeDescriptor nodeDescriptor : nodeDescriptors) {
-                    navigatables.add(new OpenFileDescriptor(project, nodeDescriptor.getElement().getFile()));
+        MyContentPanel() {
+            super(true);
+            setProvideQuickActions(false);
+//            JScrollPane scrollPane = new JBScrollPane(fsTree.getTree());
+//            setContent(scrollPane);
+
+
+        }
+
+        @Nullable
+        public
+        Object getData(@NonNls final String dataId) {
+            // System.out.println("dataId = [" + dataId + "]");
+            if (PlatformDataKeys.NAVIGATABLE.is(dataId)) {
+                final VirtualFile file = fsTree.getSelectedFile();
+                if (file != null) {
+                    return new OpenFileDescriptor(project, file);
                 }
-                sink.put(PlatformDataKeys.NAVIGATABLE_ARRAY,
-                         navigatables.toArray(new Navigatable[navigatables.size()]));
             }
-            else if (key == PlatformDataKeys.DELETE_ELEMENT_PROVIDER) {
-                sink.put(PlatformDataKeys.DELETE_ELEMENT_PROVIDER, deleteWithRefresh);
+            else if (PlatformDataKeys.VIRTUAL_FILE.is(dataId)) {
+                return fsTree.getSelectedFile();
             }
+            return super.getData(dataId);
         }
     }
 }
