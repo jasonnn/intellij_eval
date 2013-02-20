@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,6 +22,7 @@ import java.util.Collections;
  * To change this template use File | Settings | File Templates.
  */
 public class EvalPluginFactoryImpl implements EvalPluginFactory {
+
 
     private EvalAppService appService;
     private EvalProjectService projectService;
@@ -51,7 +53,7 @@ public class EvalPluginFactoryImpl implements EvalPluginFactory {
 
     private File findPluginFolder(String name) throws FileNotFoundException {
         for (File root : dirsToSearch) {
-            for (File pluginDir : PluginUtil.getPluginDirs(root)) {
+            for (File pluginDir : PluginUtil.findPluginDirs(root)) {
                 if (pluginDir.getName().equals(name)) return pluginDir;
             }
         }

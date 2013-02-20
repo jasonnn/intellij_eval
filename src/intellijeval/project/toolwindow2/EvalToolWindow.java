@@ -11,6 +11,7 @@ import com.intellij.openapi.fileChooser.FileSystemTreeFactory;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.util.EditSourceOnEnterKeyHandler;
@@ -26,12 +27,9 @@ import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-
-import static intellijeval.project.PluginUtil.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -44,11 +42,14 @@ import static intellijeval.project.PluginUtil.*;
  */
 public
 class EvalToolWindow implements Disposable {
+    private static final Logger log = Logger.getLogger(EvalToolWindow.class.getName());
+    public static final
+    Key<EvalToolWindow> EVAL_TOOL_WINDOW_KEY = Key.create(EvalToolWindow.class.getName());  //TODO:what??
     private static final String ServiceID = "EvalWindow";
     private FileSystemTree fsTree;
     private MyContentPanel contentPanel;
     private Project project;
-    private List<VirtualFile> selectedFiles;
+    private String selectedPluginId;
 
     public
     EvalToolWindow(Project project) {
@@ -67,14 +68,17 @@ class EvalToolWindow implements Disposable {
         contentPanel.setContent(ScrollPaneFactory.createScrollPane(fsTree.getTree()));
 
         intsallOpenFileHandlers(fsTree.getTree());
-
+        //TODO: is this still necessary?
         //TODO: this isnt working either
         //why is fsTree always showing null for selectedFiles?
         fsTree.addListener(new FileSystemTree.Listener() {
             @Override
             public
             void selectionChanged(List<VirtualFile> selection) {
-                selectedFiles = new ArrayList<VirtualFile>(selection);
+                if (selection.isEmpty()) return;
+                VirtualFile dir = PluginUtil.pluginFolderOf(selection.get(0));
+                selectedPluginId = PluginUtil.virtualFile2Id(dir);
+                System.out.println("selectedPluginId = " + selectedPluginId);
             }
         }, this);
 
@@ -124,37 +128,44 @@ class EvalToolWindow implements Disposable {
     }
 
     public
-    Collection<String> getSelectedPluginsIDs() {
-        VirtualFile[] selected = (VirtualFile[]) selectedFiles.toArray();// fsTree.getSelectedFiles();
-        //TODO: this is also ugly
-        return virtualFilesToIDs(findPluginRootsFor(selected));
+    String getSelectedPluginId() {
+        return selectedPluginId;
     }
 
-    public
-    Collection<URI> getSelectedPluginsBasePaths() {
-        VirtualFile[] selected = (VirtualFile[]) selectedFiles.toArray();// fsTree.getSelectedFiles();
-
-        //TODO: this is ugly!
-        return virtualFilesToURI(findPluginRootsFor(selected));
-    }
+//    public
+//    Collection<String> getSelectedPluginsIDs() {
+//        VirtualFile[] selected = (VirtualFile[]) selectedFiles.toArray();// fsTree.getSelectedFiles();
+//        //TODO: this is also ugly
+//        return virtualFilesToIDs(findPluginRootsFor(selected));
+//    }
+//
+//    public
+//    Collection<URI> getSelectedPluginsBasePaths() {
+//        VirtualFile[] selected = (VirtualFile[]) selectedFiles.toArray();// fsTree.getSelectedFiles();
+//
+//        //TODO: this is ugly!
+//        return virtualFilesToURI(findPluginRootsFor(selected));
+//    }
 
     @Override
     public
     void dispose() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        log.log(Level.WARNING,"not yet implemented");
+        //TODO
     }
 
-    public static
-    class SERVICE {
-        private
-        SERVICE() {
-        }
-
-        public static
-        EvalToolWindow getInstance(Project project) {
-            return ServiceManager.getService(project, EvalToolWindow.class);
-        }
-    }
+//    @Deprecated
+//    public static
+//    class SERVICE {
+//        private
+//        SERVICE() {
+//        }
+//        @Deprecated
+//        public static
+//        EvalToolWindow getInstance(Project project) {
+//            return ServiceManager.getService(project, EvalToolWindow.class);
+//        }
+//    }
 
     class MyContentPanel extends SimpleToolWindowPanel {
         public

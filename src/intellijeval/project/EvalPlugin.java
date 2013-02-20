@@ -21,6 +21,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -35,6 +36,7 @@ import java.util.concurrent.Callable;
 // http://confluence.jetbrains.com/display/IDEADEV/IntelliJ+IDEA+Messaging+infrastructure
 public
 class EvalPlugin implements Disposable {
+    private static final Logger log = Logger.getLogger(EvalPlugin.class.getName());
     private final String id;
     private final URI pluginBase;
     private final EvalContext context;
@@ -134,12 +136,14 @@ class EvalPlugin implements Disposable {
             @Override
             public
             void onSuccess(ExecutionResult executionResult) {
+                log.info("");
                 //TODO
             }
 
             @Override
             public
             void onFailure(Throwable throwable) {
+                log.info("");
                 //TODO
             }
         });
@@ -163,7 +167,7 @@ class EvalPlugin implements Disposable {
     @Override
     public
     void dispose() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        log.warning("implement me"); //TODO
     }
 
     static

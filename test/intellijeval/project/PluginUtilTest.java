@@ -7,7 +7,10 @@ import util.TestUtil;
 import java.io.File;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,6 +24,20 @@ class PluginUtilTest {
     @Before
     public
     void setUp() throws Exception {
+
+    }
+
+    @Test
+    public
+    void testGetPluginDirs() throws Exception {
+        File examples_dir = new File(TestUtil.getProjectDir(), "/plugin_examples/intellijeval/pluginexamples");
+        assert examples_dir.exists() && examples_dir.isDirectory();
+
+        Collection<File> examplePluginDirs = PluginUtil.findPluginDirs(examples_dir);
+
+        assertNotNull(examplePluginDirs);
+        assert !examplePluginDirs.isEmpty() : "plugin dirs was empty!";
+
 
     }
 

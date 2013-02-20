@@ -2,12 +2,11 @@ package intellijeval.project;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.application.ApplicationManager;
 import intellijeval.Util;
 import intellijeval.project.toolwindow2.EvalToolWindow;
 
-import java.util.Collection;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,26 +15,37 @@ import java.util.concurrent.ExecutionException;
  * Time: 5:05 PM
  * To change this template use File | Settings | File Templates.
  */
-public class RunPluginAction extends AnAction {
+public
+class RunPluginAction extends AnAction {
+    private static final Logger log = Logger.getLogger(RunPluginAction.class.getName());
 
-    public RunPluginAction(){
+    public
+    RunPluginAction() {
         super("Run Plugin", "Run selected plugins", Util.EVAL_ICON);
     }
+
     @Override
-    public void actionPerformed(AnActionEvent e) {
+    public
+    void actionPerformed(AnActionEvent e) {
         doEval(e);
 
     }
 
-    private void doEval(AnActionEvent event){
-        EvalToolWindow window = EvalToolWindow.SERVICE.getInstance(event.getProject());
-        Collection<String> ids = window.getSelectedPluginsIDs();
-        if(ids.isEmpty()) return;
-        String first = ids.iterator().next();
+    private
+    void doEval(AnActionEvent event) {
         EvalProjectService projectService = EvalProjectService.SERVICE.getInstance(event.getProject());
+        EvalToolWindow window = projectService.getWindow();
+        String id = window.getSelectedPluginId();
+        if (id == null) {
+            log.warning("id was NULL!. Not executing plugin.");
+            return;
+        }
+        //Collection<String> ids = window.getSelectedPluginsIDs();
+//        if(ids.isEmpty()) return;
+//        String first = ids.iterator().next();
         EvalPlugin plugin;
         try {
-             plugin = projectService.getPlugin(first);
+            plugin = projectService.getPlugin(id);
         }
         catch (ExecutionException e) {
             throw new RuntimeException(e);

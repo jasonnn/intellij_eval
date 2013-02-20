@@ -12,6 +12,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,7 +24,7 @@ import java.util.*;
  */
 public
 class PluginUtil {
-
+    private static final Logger log = Logger.getLogger(PluginUtil.class.getName());
     private static final URI defaultBase = URI.create("file://" + PathManager.getPluginsPath() + "/intellij-eval-plugins");
 
     public static
@@ -39,26 +41,32 @@ class PluginUtil {
 
     public static
     Collection<File> getDefaultPluginDirs() {
-        return getPluginDirs(new File(getDefaultBasePath()));
+        return findPluginDirs(new File(getDefaultBasePath()));
     }
 
+    //TODO: recursive search?
     public static
-    Collection<File> getPluginDirs(File base) {
+    Collection<File> findPluginDirs(File base) {
         Set<File> ret = new HashSet<File>();
         File[] dirs = base.listFiles(Filters.DIRECTORIES);
 
-        if (dirs == null || dirs.length == 0) return Collections.emptySet();
-
-        for (File dir : dirs) {
-            File[] files = dir.listFiles(Filters.FILES);
-            if (files == null || files.length == 0) return Collections.emptySet();
-            for (File f : files) {
-                if (f.getName().equals("plugin.groovy")) {
-                    ret.add(dir);
-                    break;
-                }
-            }
+        if (dirs == null) {
+            log.log(Level.WARNING, "problem finding sub directories of {0}.", base);
+            return Collections.emptySet();
         }
+        if (dirs.length == 0) {
+            log.log(Level.WARNING, "folder: {0} contains no subdirs.", base);
+            return Collections.emptySet();
+        }
+        int searchCount = 0;  //TODO: remove after done debugging
+        for (File dir : dirs) {
+            if (isPluginFolder(dir)) ret.add(dir);
+            searchCount++;
+        }
+
+        if (ret.isEmpty()) log.log(Level.WARNING,
+                                   "No plugin directories found after searching {0} subfolders of {1}",
+                                   new Object[]{searchCount, base});
 
 
         return ret;
@@ -146,7 +154,7 @@ class PluginUtil {
             if (isPluginFolder(file)) return file;
             else file = file.getParent();
         }
-
+        log.warning("didnt find plugin folder of VirtualFile : "+file.getName()+ "\n returning null.");
         return null;
     }
 
@@ -156,34 +164,53 @@ class PluginUtil {
     }
 
     public static
+    boolean isPluginFolder(File dir) {
+        return dir.isDirectory() && dir.listFiles(Filters.EVAL_PLUGIN_FILE).length == 1;
+    }
+
+    public static
     String url2Id(URL url) {
         try {
             return dir2Id(new File(url.toURI()));
         }
         catch (URISyntaxException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();  //To change body of catch statement u   File | Settings | File Templates.
         }
         return null;
 
     }
 
-    private static
-    enum Filters implements FileFilter {
+    static abstract
+    class Filters {
+        public static final FileFilter FILES = new FileFilter() {
+            @Override
+            public
+            boolean accept(File pathname) {
+                return pathname.isFile();
+            }
+        };
+        public static final FileFilter DIRECTORIES = new FileFilter() {
+            @Override
+            public
+            boolean accept(File pathname) {
+                return pathname.isDirectory();
+            }
+        };
+        public static final FileFilter EVAL_PLUGIN_FILE = new FileFilter() {
 
-        FILES(false),
-        DIRECTORIES(true);
-        private final boolean dir;
-
-        Filters(boolean b) {
-            this.dir = b;
-        }
-
-        @Override
-        public
-        boolean accept(File file) {
-            return dir && file.isDirectory();
-        }
-
+            @Override
+            public
+            boolean accept(File f) {
+                return f.isFile() && f.getName().equals("plugin.groovy");
+            }
+        };
+        public static final FileFilter EVAL_PLUGIN_DIRECTORY = new FileFilter() {
+            @Override
+            public
+            boolean accept(File pathname) {
+                return pathname.isDirectory() && pathname.listFiles(EVAL_PLUGIN_FILE).length == 1;
+            }
+        };
     }
 
 

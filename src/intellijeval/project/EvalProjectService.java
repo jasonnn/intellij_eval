@@ -18,6 +18,7 @@ import intellijeval.util.cache.ObservableCache;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,6 +29,8 @@ import java.util.concurrent.TimeUnit;
  */
 public
 class EvalProjectService implements Disposable.Parent {
+
+    private static final Logger log = Logger.getLogger(EvalProjectService.class.getName());
     private final EvalToolWindow window;
     private final Project project;
     private final RemovalListener<String, EvalPlugin> removalListener = new RemovalListener<String, EvalPlugin>() {
@@ -122,13 +125,13 @@ class EvalProjectService implements Disposable.Parent {
     @Override
     public
     void dispose() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        log.warning("implement!"); //TODO
     }
 
     @Override
     public
     void beforeTreeDispose() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        log.warning("implement?"); //TODO
     }
 
     public static
