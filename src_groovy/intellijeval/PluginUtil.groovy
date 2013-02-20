@@ -577,7 +577,7 @@ class PluginUtil {
 	}
 
 	static String asString(message) {
-		message?.class?.isArray() ? Arrays.toString(message) : String.valueOf(message)
+		message?.getClass()?.isArray() ? Arrays.toString(message) : String.valueOf(message)
 	}
 
 	/**

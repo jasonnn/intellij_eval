@@ -7,12 +7,12 @@ import intellijeval.project.EvalPlugin;
 import intellijeval.project.EvalProjectService;
 import intellijeval.project.PluginUtil;
 import intellijeval.project.script.ctx.EvalContextFactory;
+import intellijeval.project.script.ctx.impl.EvalContextFactoryImpl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,7 +21,8 @@ import java.util.logging.Logger;
  * Time: 2:42 PM
  * To change this template use File | Settings | File Templates.
  */
-public class EvalPluginFactoryImpl implements EvalPluginFactory {
+public
+class EvalPluginFactoryImpl implements EvalPluginFactory {
 
 
     private EvalAppService appService;
@@ -30,7 +31,12 @@ public class EvalPluginFactoryImpl implements EvalPluginFactory {
     private Disposable parent;
     private EvalContextFactory contextFactory;
 
-    public EvalPluginFactoryImpl(Disposable parent, EvalAppService appService, EvalProjectService evalProjectService, Collection<File> dirsToSearch, EvalContextFactory contextFactory) {
+    public
+    EvalPluginFactoryImpl(Disposable parent,
+                          EvalAppService appService,
+                          EvalProjectService evalProjectService,
+                          Collection<File> dirsToSearch,
+                          EvalContextFactory contextFactory) {
         this.appService = appService;
         this.projectService = evalProjectService;
         this.dirsToSearch = dirsToSearch;// new HashSet<File>(dirsToSearch);
@@ -38,20 +44,32 @@ public class EvalPluginFactoryImpl implements EvalPluginFactory {
         this.contextFactory = contextFactory;
     }
 
-    public EvalPluginFactoryImpl(EvalProjectService projectService) {
-        this(projectService, EvalAppService.getInstance(), projectService, Collections.singleton(new File(PluginUtil.getDefaultBasePath())), null);
+    public
+    EvalPluginFactoryImpl(EvalProjectService projectService) {
+        this(projectService,
+             EvalAppService.getInstance(),
+             projectService,
+             Collections.singleton(new File(PluginUtil.getDefaultBasePath())),
+             new EvalContextFactoryImpl());
     }
 
     @Override
-    public EvalPlugin createPlugin(String name) throws Exception {
+    public
+    EvalPlugin createPlugin(String name) throws Exception {
         File dir = findPluginFolder(name);
 
-        EvalPlugin plugin = new EvalPlugin(name, dir.toURI(), contextFactory.createContext(), projectService.getProject(), projectService, appService);
+        EvalPlugin plugin = new EvalPlugin(name,
+                                           dir.toURI(),
+                                           contextFactory.createContext(),
+                                           projectService.getProject(),
+                                           projectService,
+                                           appService);
         Disposer.register(parent, plugin);
         return plugin;
     }
 
-    private File findPluginFolder(String name) throws FileNotFoundException {
+    private
+    File findPluginFolder(String name) throws FileNotFoundException {
         for (File root : dirsToSearch) {
             for (File pluginDir : PluginUtil.findPluginDirs(root)) {
                 if (pluginDir.getName().equals(name)) return pluginDir;
