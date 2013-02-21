@@ -82,7 +82,9 @@ class PluginUtil {
 	 * @param notificationType (optional) see https://github.com/JetBrains/intellij-community/blob/master/platform/platform-api/src/com/intellij/notification/NotificationType.java
 	 * (Note that NotificationType.ERROR will not just log message but will also show it in "IDE internal errors" toolbar.)
 	 */
-	static void log(@Nullable message, NotificationType notificationType = INFORMATION) {
+    static boolean CAN_CANCEL = false;
+
+    static void log(@Nullable message, NotificationType notificationType = INFORMATION) {
 		if (!(message instanceof Throwable)) {
 			message = asString(message)
 		}
