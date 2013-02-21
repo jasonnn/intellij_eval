@@ -5,6 +5,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
+import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import intellijeval.EvalAppService;
 import intellijeval.project.script.EvalPluginFactory;
@@ -15,6 +16,7 @@ import intellijeval.util.map.EvalBindingsMap;
 import intellijeval.util.map.ObservableMap;
 import intellijeval.util.cache.ObservableCache;
 
+import java.util.HashMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +61,9 @@ class EvalProjectService implements Disposable.Parent {
     //TODO: for adding project/module libraries.
     private GroovyClassLoader projectClassLoader;
     private EvalBindingsMap projectBindings;
+
+
+
     private ObservableCache<String, Object> projectBindings2;
 
     public
@@ -71,6 +76,8 @@ class EvalProjectService implements Disposable.Parent {
         this.pluginFactory = new EvalPluginFactoryImpl(this);
 
     }
+
+
 
     public
     ObservableMap.Listener<String, Object> getMapListener() {

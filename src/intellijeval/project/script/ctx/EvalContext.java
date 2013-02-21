@@ -5,6 +5,8 @@ import groovy.lang.MissingFieldException;
 import groovy.lang.MissingMethodException;
 import groovy.lang.MissingPropertyException;
 
+import java.util.Map;
+
 /**
  * Created with IntelliJ IDEA.
  * User: jason
@@ -28,4 +30,8 @@ public interface EvalContext extends ScriptOutputHandler {
     void handleMissingAttribute(String attribute, Object newValue);
 
     <T> void disposeCallback(Closure<T> closure);
+
+    <T> T proxy(Class<T> toImplement);
+
+    Object proxy(Map<String,Object> args);
 }

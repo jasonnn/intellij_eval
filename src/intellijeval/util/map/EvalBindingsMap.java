@@ -16,16 +16,23 @@ import java.util.Map;
 public
 class EvalBindingsMap extends CachingObservableMap<String, Object> {
 
-    private final Binding binding = new Binding(this);
+    private final Binding binding;
 
     public
-    EvalBindingsMap(Map<String, Object> delegate) {
+    EvalBindingsMap(Map delegate) {
         super(delegate);
+        this.binding = createBinding();
     }
 
     public
-    EvalBindingsMap(Map<String, Object> map, RefType refType) {
+    EvalBindingsMap(Map map, RefType refType) {
         super(map, refType);
+        this.binding = createBinding();
+    }
+
+    protected
+    Binding createBinding() {
+        return new Binding(this);
     }
 
     public

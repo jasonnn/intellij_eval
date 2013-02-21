@@ -43,6 +43,16 @@ class TestCtx extends AbstractEvalContext {
     }
 
     @Override
+    def <T> T proxy(Class<T> toImplement) {
+        println "TestCtx.proxy"
+    }
+
+    @Override
+    Object proxy(Map<String, Object> args) {
+        println "TestCtx.proxy"
+    }
+
+    @Override
     Object handleMissingMethod(String name, Object[] args) throws MissingMethodException {
         println "TestCtx.handleMissingMethod"
     }

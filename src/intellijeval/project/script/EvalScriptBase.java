@@ -4,6 +4,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import groovy.lang.*;
 import intellijeval.project.script.ctx.EvalContext;
 
+import java.util.Map;
+
 /**
  * Created with IntelliJ IDEA.
  * User: jason
@@ -129,6 +131,32 @@ class EvalScriptBase extends Script {
             log.warn("runOnce: no context");
             return closure.call();
         }
+    }
+
+    public
+    <T> T proxy(Class<T> toImplement){
+        if (ctx != null) {
+          return  ctx.proxy(toImplement);
+        }
+        else{
+            log.warn("proxy: no ctx. returning null!");
+        }
+        return null;
+    }
+
+    public
+   Object proxy(Map<String,Object> args){
+        if (ctx != null) {
+            return ctx.proxy(args);
+        }  else{
+            log.warn("ctx is null");
+            return null;
+        }
+    }
+
+    public
+    <T> void onDispose(Closure<T> closure){
+        dispose(closure);
     }
 
     public

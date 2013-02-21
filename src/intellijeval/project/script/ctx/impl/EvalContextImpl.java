@@ -7,6 +7,7 @@ import groovy.lang.MissingPropertyException;
 import intellijeval.project.script.ctx.AbstractEvalContext;
 import intellijeval.project.script.ctx.ScriptOutputHandler;
 
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -66,5 +67,17 @@ class EvalContextImpl extends AbstractEvalContext {
     public
     <T> void disposeCallback(Closure<T> closure) {
             log.entering(EvalContextImpl.class.getName(),"disposeCallback");
+    }
+
+    @Override
+    public
+    <T> T proxy(Class<T> toImplement) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public
+    Object proxy(Map<String, Object> args) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

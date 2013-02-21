@@ -147,13 +147,13 @@ class PluginUtil {
 
     public static
     VirtualFile pluginFolderOf(VirtualFile file) {
-        Deque<VirtualFile> toSearch = new ArrayDeque<VirtualFile>();
-        toSearch.add(file);
-
-        while (file != null) {
-            if (isPluginFolder(file)) return file;
-            else file = file.getParent();
+        assert file !=null;
+         VirtualFile tmp = file;
+        while (tmp != null) {
+            if (isPluginFolder(tmp)) return tmp;
+            else tmp = tmp.getParent();
         }
+
         log.warning("didnt find plugin folder of VirtualFile : "+file.getName()+ "\n returning null.");
         return null;
     }
