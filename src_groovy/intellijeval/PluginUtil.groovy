@@ -59,6 +59,7 @@ import com.intellij.unscramble.UnscrambleDialog
 import com.intellij.util.ui.UIUtil
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
+import org.junit.Test
 
 import javax.swing.*
 import java.awt.*
@@ -435,7 +436,7 @@ class PluginUtil {
 	 * @param callback should calculate new value given previous one
 	 * @return new value
 	 */
-	static <T> T getAndCachedBy(String varName, @Nullable initialValue = null, Closure callback = {it}) {
+	@Nullable static <T> T changeGlobalVar(String varName, @Nullable initialValue = null, Closure callback) {
 		def actionManager = ActionManager.instance
 		def action = actionManager.getAction(asActionId(varName))
 
@@ -455,30 +456,27 @@ class PluginUtil {
 		newValue
 	}
 
-	static <T> T setGlobalVar(String varName, @Nullable value) {
-		// TODO
-		null
+	@Nullable static <T> T setGlobalVar(String varName, @Nullable varValue) {
+		changeGlobalVar(varName){ varValue }
 	}
 
-	static <T> T getGlobalVar(String varName) {
-		ActionManager.instance.with {
-			def actionIds = getActionIds(asActionId(varName))
-			if (actionIds.length == 0) null
-			else getAction(actionIds.first()).value
-		}
+	@Nullable static <T> T getGlobalVar(String varName) {
+		def action = ActionManager.instance.getAction(asActionId(varName))
+		action == null ? null : action.value
 	}
 
-	static <T> T removeGlobalVar(String varName) {
-		T result = getGlobalVar(varName)
+	@Nullable static <T> T removeGlobalVar(String varName) {
+		def action = ActionManager.instance.getAction(asActionId(varName))
+		if (action == null) return null
 		ActionManager.instance.unregisterAction(asActionId(varName))
-		result
+		action.value
 	}
 
 	/**
 	 * TODO
 	 *
 	 */
-	static doInBackground(String taskDescription = "", boolean canBeCancelled = true,
+	static doInBackground(String taskDescription = "", boolean canBeCancelled = CAN_CANCEL,
 	                      PerformInBackgroundOption backgroundOption = ALWAYS_BACKGROUND,
 	                      Closure task, Closure whenCancelled = {}, Closure whenDone) {
 		AtomicReference result = new AtomicReference(null)
@@ -576,10 +574,12 @@ class PluginUtil {
 		"IntelliJEval-" + globalVarKey
 	}
 
-	static String asString(message) {
-		message?.getClass()?.isArray() ? Arrays.toString(message) : String.valueOf(message)
+	static String asString(@Nullable message) {
+		if (message?.getClass()?.isArray()) return Arrays.toString(message)
+		if (message instanceof MapWithDefault) return "{" + message.entrySet().join(", ") + "}"
+		String.valueOf(message)
 	}
-
+	
 	/**
 	 * Original version borrowed from here
 	 * http://code.google.com/p/idea-string-manip/source/browse/trunk/src/main/java/osmedile/intellij/stringmanip/AbstractStringManipAction.java
@@ -640,4 +640,21 @@ class PluginUtil {
 	// Using WeakHashMap to make unregistering tool window optional
 	private static final Map<ProjectManagerListener, String> pmListenerToToolWindowId = new WeakHashMap()
 	private static final Map<ConsoleView, String> consoleToConsoleTitle = new WeakHashMap()
+	
+	@Test void "asString() should convert to string values of any type"() {
+		assert asString(null) == "null"
+
+		assert asString(1) == "1"
+
+		assert asString([] as Integer[]) == "[]"
+		assert asString([1] as Integer[]) == "[1]"
+
+		assert asString([]) == "[]"
+		assert asString([1, 2, 3]) == "[1, 2, 3]"
+
+		assert asString([:]) == "{}"
+		assert asString([a: 1]) == "{a=1}"
+		assert asString([:].withDefault { 0 }) == "{}"
+		assert asString([a: 1].withDefault { 0 }) == "{a=1}"
+	}
 }
