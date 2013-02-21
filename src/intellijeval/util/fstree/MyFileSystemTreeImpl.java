@@ -23,6 +23,7 @@ class MyFileSystemTreeImpl extends FileSystemTreeImpl {
     MyFileSystemTreeImpl(@Nullable Project project,
                          FileChooserDescriptor descriptor) {
         super(project, descriptor);
+        System.out.println("MyFileSystemTreeImpl.MyFileSystemTreeImpl");
     }
 
     public
@@ -33,5 +34,6 @@ class MyFileSystemTreeImpl extends FileSystemTreeImpl {
                          @Nullable Runnable onInitialized,
                          @Nullable Convertor<TreePath, String> speedSearchConverter) {
         super(project, descriptor, tree, renderer, onInitialized, speedSearchConverter);
+        System.out.println("MyFileSystemTreeImpl.MyFileSystemTreeImpl(....)");
     }
 }

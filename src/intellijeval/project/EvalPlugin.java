@@ -7,10 +7,12 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
-import groovy.lang.GroovyClassLoader;
+import groovy.lang.*;
 import groovy.util.GroovyScriptEngine;
 import intellijeval.EvalAppService;
 import intellijeval.ExecutionResult;
+import intellijeval.project.script.DefaultBindingKeys;
+import intellijeval.project.script.EvalBinding;
 import intellijeval.project.script.ScriptUtil;
 import intellijeval.project.script.ctx.EvalContext;
 import intellijeval.util.map.EvalBindingsMap;
@@ -96,7 +98,25 @@ class EvalPlugin implements Disposable {
     void initBindings() {
         this.projectBindingContributions = new EvalBindingsMap(new HashMap<String, Object>());
         projectService.observeMap(projectBindingContributions);
-        this.pluginBindings = new EvalBindingsMap(new HashMap<String, Object>());
+        this.pluginBindings = new EvalBindingsMap(new HashMap<String, Object>()){
+            @Override
+            protected
+            Binding createBinding() {
+                return new EvalBinding(this){
+                    @Override
+                    public
+                    Object getProperty(String property) {
+                        try{
+                        return super.getProperty(property);
+                        } catch (MissingPropertyException e){
+                        if(DefaultBindingKeys.APP.is(property)) return appService; //TODO
+                        if(DefaultBindingKeys.PROJECT.is(property)) return projectService.getProjectBindings(); //TODO
+                         throw e;
+                        }
+                    }
+                };
+            }
+        };
     }
 
     ExecutionResult run(AnActionEvent event) {

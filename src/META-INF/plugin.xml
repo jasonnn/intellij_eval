@@ -61,6 +61,22 @@ How to use:
         <projectService id="EvalWindow" serviceInterface="intellijeval.project.toolwindow2.EvalToolWindow" serviceImplementation="intellijeval.project.toolwindow2.EvalToolWindow" />
          <projectService id="EvalProjectService" serviceInterface="intellijeval.project.EvalProjectService" serviceImplementation="intellijeval.project.EvalProjectService" />
 
+   <!--
+     TMP:
+   -->
+        <projectService  id="BrowserTest" serviceInterface="intellijeval.tmp.browser.MyToolWindow" serviceImplementation="intellijeval.tmp.browser.MyToolWindow" />
+        <toolWindow id="BrowserWindow" factoryClass="intellijeval.tmp.browser.MyWindowFactory" anchor="bottom" />
+
+        <!--FSTREE-->
+        <projectService id="MyFSTreeFactory"
+                        serviceInterface="com.intellij.openapi.fileChooser.FileSystemTreeFactory"
+                        serviceImplementation="intellijeval.util.fstree.MyFileSystemTreeFactory"
+                        order="first"
+                        overrides="true" />
+        <!-- TODO: what do the last 2 params mean?  -->
+        <!--java.lang.RuntimeException: Service: com.intellij.openapi.fileChooser.FileSystemTreeFactory doesn't override anything-->
+
+
     </extensions>
 
     <!--<project-components>-->
